@@ -1,8 +1,8 @@
 require('dotenv').config();
 const Influx = require('influx');
 const Logguer = require('./Logger/Logger');
+const { Log } = require('@influxdata/influxdb-client');
 
-// Configuración para InfluxDB 1.6 local
 const influx = new Influx.InfluxDB({
   host: process.env.INFLUX_HOST,
   port: process.env.INFLUX_PORT,
@@ -11,75 +11,138 @@ const influx = new Influx.InfluxDB({
   password: process.env.INFLUX_PASSWORD,
 });
 
-/**
- * Extrae las métricas históricas de CPU, memoria y disco por nodo para graficar.
- * @param {String} host Opcional. Si se especifica, filtra por ese nodo.
- * @param {String} range Rango de tiempo InfluxQL (por defecto: '1h').
- * @param {String} interval Intervalo de agrupación temporal (por defecto: '10m').
- * @returns {Promise<Array>} Arreglo de objetos con host, time, cpu_usage, mem_usage, disk_usage.
- */
-async function extraerMetricasParaGrafica({ host, range = '1h', interval = '10m' } = {}) {
-  let where = `time > now() - ${range}`;
-  if (host) where += ` AND "host" = '${host}'`;
+// Función para formatear bytes
+function formatBytes(bytes, decimals = 2) {
+    if (bytes === 0 || bytes === 'N/A' || bytes === null || bytes === undefined) return 'N/A';
+    if (typeof bytes === 'string') return bytes;
+    
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
 
-  // Cambia los campos para traer los valores correctos:
-  // CPU: usage_user
-  // Memoria: used_percent
-  // Disco: used_percent
+// Función para formatear porcentajes
+function formatPercent(value) {
+    if (value === null || value === undefined || value === 'N/A') return 'N/A';
+    if (typeof value === 'string') return value;
+    
+    return `${value.toFixed(1)}%`;
+}
 
-  const cpuQuery = `
-    SELECT mean("usage_user") AS cpu_usage FROM "cpu" WHERE ${where} GROUP BY time(${interval}), "host" fill(null)
-  `;
-  const memQuery = `
-    SELECT mean("used_percent") AS mem_usage FROM "mem" WHERE ${where} GROUP BY time(${interval}), "host" fill(null)
-  `;
-  const diskQuery = `
-    SELECT mean("used_percent") AS disk_usage FROM "disk" WHERE ${where} GROUP BY time(${interval}), "host" fill(null)
-  `;
-
+async function obtenerDatosPorHost() {
   try {
-    // Ejecuta las tres consultas por separado
-    const cpuResults = await influx.query(cpuQuery);
-    const memResults = await influx.query(memQuery);
-    const diskResults = await influx.query(diskQuery);
+    // Obtener la lista de hosts únicos
+    const hosts = await influx.query(`
+      SHOW TAG VALUES FROM "cpu" WITH KEY = "host"
+    `);
 
-    // Unifica los resultados por host y tiempo
-    const combined = {};
+    const resultados = [];
 
-    function addToCombined(arr, field) {
-      arr.forEach(row => {
-        const { host, time } = row;
-        if (!host || !time) return;
-        const id = `${host}_${time}`;
-        if (!combined[id]) {
-          combined[id] = { host, time };
-        }
-        combined[id][field] = row[field];
+    for (const hostObj of hosts) {
+      const host = hostObj.value;
+
+      // Obtener datos de memoria (usar nombres de alias seguros)
+      const memoriaRaw = await influx.query(`
+        SELECT last("used") as mem_used, last("free") as mem_free, last("total") as mem_total 
+        FROM "mem" 
+        WHERE "host" = '${host}'
+      `);
+
+      // Obtener datos de CPU (escapar "user" o usar alias diferente)
+      const cpuRaw = await influx.query(`
+        SELECT last("usage_idle") as cpu_idle, last("usage_system") as cpu_system, last("usage_user") as cpu_user 
+        FROM "cpu" 
+        WHERE "host" = '${host}'
+      `);
+
+      // Obtener datos de disco
+      const discoRaw = await influx.query(`
+        SELECT last("used") as disk_used, last("free") as disk_free, last("total") as disk_total 
+        FROM "disk" 
+        WHERE "host" = '${host}'
+      `);
+
+      const memoriaData = memoriaRaw[0] || {};
+      const cpuData = cpuRaw[0] || {};
+      const discoData = discoRaw[0] || {};
+
+      // Calcular porcentajes usando los nuevos nombres de alias
+      const memUsedPercent = memoriaData.mem_used && memoriaData.mem_total ? 
+        (memoriaData.mem_used / memoriaData.mem_total) * 100 : null;
+      
+      const diskUsedPercent = discoData.disk_used && discoData.disk_total ? 
+        ((discoData.disk_total - discoData.disk_free) * 100) / discoData.disk_total : null;
+
+      // Estructurar datos formateados
+      const memoria = {
+        used: {
+          raw: memoriaData.mem_used,
+          formatted: formatBytes(memoriaData.mem_used),
+          percent: memUsedPercent ? formatPercent(memUsedPercent) : 'N/A'
+        },
+        free: {
+          raw: memoriaData.mem_free,
+          formatted: formatBytes(memoriaData.mem_free),
+          percent: memUsedPercent ? formatPercent(100 - memUsedPercent) : 'N/A'
+        },
+        total: {
+          raw: memoriaData.mem_total,
+          formatted: formatBytes(memoriaData.mem_total)
+        },
+        usagePercent: memUsedPercent ? formatPercent(memUsedPercent) : 'N/A'
+      };
+
+      const cpu = {
+        idle: {
+          raw: cpuData.cpu_idle,
+          formatted: formatPercent(cpuData.cpu_idle)
+        },
+        system: {
+          raw: cpuData.cpu_system,
+          formatted: formatPercent(cpuData.cpu_system)
+        },
+        user: {
+          raw: cpuData.cpu_user,
+          formatted: formatPercent(cpuData.cpu_user)
+        },
+        totalUsage: cpuData.cpu_idle ? formatPercent(100 - cpuData.cpu_idle) : 'N/A'
+      };
+
+      const disco = {
+        used: {
+          raw: discoData.disk_used,
+          formatted: formatBytes(discoData.disk_used),
+          percent: diskUsedPercent ? formatPercent(diskUsedPercent) : 'N/A'
+        },
+        free: {
+          raw: discoData.disk_free,
+          formatted: formatBytes(discoData.disk_free),
+          percent: diskUsedPercent ? formatPercent(100 - diskUsedPercent) : 'N/A'
+        },
+        total: {
+          raw: discoData.disk_total,
+          formatted: formatBytes(discoData.disk_total)
+        },
+        usagePercent: diskUsedPercent ? formatPercent(diskUsedPercent) : 'N/A'
+      };
+
+      resultados.push({ 
+        host, 
+        memoria,
+        cpu, 
+        disco 
       });
     }
 
-    addToCombined(cpuResults, 'cpu_usage');
-    addToCombined(memResults, 'mem_usage');
-    addToCombined(diskResults, 'disk_usage');
-
-    const final = Object.values(combined);
-    Logguer.info(`Métricas extraídas para gráfica (${final.length} puntos).`);
-    return final;
-  } catch (err) {
-    Logguer.error('Error al extraer métricas para gráfica', err);
-    throw err;
+    return resultados;
+  } catch (error) {
+    Logguer.error('Error al obtener datos de InfluxDB:', error);
+    return [];
   }
 }
 
-// Ejemplo de uso (puedes comentar esto si solo quieres exportar la función)
-if (require.main === module) {
-  extraerMetricasParaGrafica()
-    .then(data => {
-      Logguer.info('Datos para gráfica:', data.slice(0, 5)); // Muestra solo los primeros 5 para no saturar el log
-    })
-    .catch(() => {});
-}
-
-module.exports = {
-  extraerMetricasParaGrafica,
-};
+module.exports = { obtenerDatosPorHost, formatBytes, formatPercent };
