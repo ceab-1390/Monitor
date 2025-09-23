@@ -1,0 +1,27 @@
+{
+  "name": "monitor",
+  "version": "1.0.0",
+  "description": "Monitoreo de servidor con telegram",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Test ok\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ceab-1390/Monitor.git"
+  },
+  "author": "Cesar Avila",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/ceab-1390/Monitor/issues"
+  },
+  "homepage": "https://github.com/ceab-1390/Monitor#readme",
+  "dependencies": {
+    "@influxdata/influxdb-client": "^1.35.0",
+    "chartjs-node-canvas": "^5.0.0",
+    "dotenv": "^17.2.2",
+    "influx": "^5.11.0",
+    "telegraf": "^4.16.3",
+    "util": "^0.12.5"
+  }
+}
