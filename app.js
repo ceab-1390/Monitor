@@ -138,7 +138,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Función para iniciar el monitor periódico
 function iniciarMonitor() {
-    const intervaloMinutos = 5;
+    const intervaloMinutos = 15;
     const intervaloMs = intervaloMinutos * 60 * 1000; // 5 minutos en milisegundos
     
     Logguer.info(`Iniciando monitor cada ${intervaloMinutos} minutos`);
