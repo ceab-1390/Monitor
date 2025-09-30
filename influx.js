@@ -1,6 +1,6 @@
 require('dotenv').config();
 const Influx = require('influx');
-const Logguer = require('./Logger/Logger');
+const Logger = require('./Logger/Logger');
 const { Log } = require('@influxdata/influxdb-client');
 
 const influx = new Influx.InfluxDB({
@@ -68,13 +68,14 @@ async function obtenerDatosPorHost() {
       
       //obtener datos de elementor css
       const elementorRaw = await influx.query(
-        `SELECT LAST(count) AS count, log_file AS log FROM elementor_errors WHERE host = ${host}`
-      )
+        `SELECT LAST(count) AS count, log_file AS log, host FROM elementor_errors WHERE host = '${host}'`
+      );
 
       const memoriaData = memoriaRaw[0] || {};
       const cpuData = cpuRaw[0] || {};
       const discoData = discoRaw[0] || {};
       const elementorData = elementorRaw[0] || {};
+      Logger.debug(elementorData)
 
       // Calcular porcentajes usando los nuevos nombres de alias
       const memUsedPercent = memoriaData.mem_used && memoriaData.mem_total ? 
@@ -152,7 +153,7 @@ async function obtenerDatosPorHost() {
 
     return resultados;
   } catch (error) {
-    Logguer.error('Error al obtener datos de InfluxDB:', error);
+    Logger.error('Error al obtener datos de InfluxDB:', error);
     return [];
   }
 }

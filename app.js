@@ -22,10 +22,9 @@ function getUsageEmoji(percent) {
 function getUsageEmojiElementor(count) {
     if (count == 0 ) return '🟢';
     
-    if (count >= 100) return '🔴';
-    if (count >= 80) return '🟠';
-    if (count >= 70) return '🟡';
-    return '⚪';
+    if (count >= 300) return '🔴';
+    if (count >= 100) return '🟠';
+    return '🟡';
 }
 
 // Función principal que obtiene y envía las métricas
