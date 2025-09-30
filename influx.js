@@ -65,10 +65,16 @@ async function obtenerDatosPorHost() {
         FROM "disk" 
         WHERE "host" = '${host}'
       `);
+      
+      //obtener datos de elementor css
+      const elementorRaw = await influx.query(
+        `SELECT LAST(count) AS count, log_file AS log FROM elementor_errors WHERE host = ${host}`
+      )
 
       const memoriaData = memoriaRaw[0] || {};
       const cpuData = cpuRaw[0] || {};
       const discoData = discoRaw[0] || {};
+      const elementorData = elementorRaw[0] || {};
 
       // Calcular porcentajes usando los nuevos nombres de alias
       const memUsedPercent = memoriaData.mem_used && memoriaData.mem_total ? 
@@ -130,11 +136,17 @@ async function obtenerDatosPorHost() {
         usagePercent: diskUsedPercent ? formatPercent(diskUsedPercent) : 'N/A'
       };
 
+      const elementor = {
+        count: elementorData.count || 0,
+        log: elementorData.log || 'N/A'
+      }
+
       resultados.push({ 
         host, 
         memoria,
         cpu, 
-        disco 
+        disco,
+        elementor
       });
     }
 

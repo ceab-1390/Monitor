@@ -19,6 +19,15 @@ function getUsageEmoji(percent) {
     return '🟢';
 }
 
+function getUsageEmojiElementor(count) {
+    if (percent == 0 ) return '🟢';
+    
+    if (count >= 100) return '🔴';
+    if (count >= 80) return '🟠';
+    if (count >= 70) return '🟡';
+    return '⚪';
+}
+
 // Función principal que obtiene y envía las métricas
 async function ejecutarMonitor() {
     try {
@@ -59,6 +68,10 @@ async function ejecutarMonitor() {
 • Libre: ${disco.free.formatted} (${disco.free.percent})
 • Total: ${disco.total.formatted}
 • **Uso total: ${disco.usagePercent}**
+
+📁 *Errores de estilos en elementor* ${getUsageEmojiElementor(element.elementor.count)}
+• Cantidad encontrada: ${element.elementor.count}
+• Log: ${element.elementor.log}
 
 ⏰ *Actualizado:* ${new Date().toLocaleString('es-ES', { 
     timeZone: 'America/Lima',
