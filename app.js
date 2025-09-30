@@ -20,7 +20,7 @@ function getUsageEmoji(percent) {
 }
 
 function getUsageEmojiElementor(count) {
-    if (percent == 0 ) return '🟢';
+    if (count == 0 ) return '🟢';
     
     if (count >= 100) return '🔴';
     if (count >= 80) return '🟠';
