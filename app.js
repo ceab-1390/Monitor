@@ -72,8 +72,8 @@ async function ejecutarMonitor() {
 • Cantidad encontrada: ${element.elementor.count}
 • Log: ${element.elementor.log}
 
-⏰ *Actualizado:* ${new Date().toLocaleString('es-ES', { 
-    timeZone: 'America/Lima',
+⏰ *Actualizado:* ${new Date().toLocaleString('es-VE', { 
+    timeZone: 'America/Caracas',
     hour12: false,
     year: 'numeric',
     month: '2-digit',
