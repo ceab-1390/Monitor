@@ -75,7 +75,9 @@ async function obtenerDatosPorHost() {
       const cpuData = cpuRaw[0] || {};
       const discoData = discoRaw[0] || {};
       const elementorData = elementorRaw[0] || {};
+      Logger.debug(`Datos para ${host}`)
       Logger.debug(elementorData)
+      Logger.debug(`Finalizado datos\n\n`)
 
       // Calcular porcentajes usando los nuevos nombres de alias
       const memUsedPercent = memoriaData.mem_used && memoriaData.mem_total ? 
