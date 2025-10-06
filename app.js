@@ -1,12 +1,13 @@
 const obtenerDatosPorHost = require('./influx').obtenerDatosPorHost;
 const Logguer = require('./Logger/Logger');
-const sendMessageTelegram = require('./bot').sendTelegramMessage;
+//const notifier.sendTelegram = require('./bot').sendTelegramMessage;
+const { NotificationService }   = require('./Services/notificationService');
+const notifier = new NotificationService();
 
 const chatId = process.env.CHAT_ID;
 
-// Variable para controlar la ejecución
-let isShuttingDown = false;
-let intervalId = null;
+
+
 
 // Función para crear mensajes con emojis de alerta
 function getUsageEmoji(percent) {
@@ -40,10 +41,6 @@ async function ejecutarMonitor() {
         }
 
         const promises = data.map(element => {
-            if (isShuttingDown) {
-                Logguer.info('Proceso en cierre, omitiendo envío de mensajes');
-                return Promise.resolve();
-            }
             
             const { host, memoria, cpu, disco } = element;
 
@@ -84,7 +81,7 @@ async function ejecutarMonitor() {
 })}
             `;
 
-            return sendMessageTelegram(chatId, mensaje, { parse_mode: 'Markdown' })
+            return notifier.sendTelegram(chatId, mensaje, { parse_mode: 'Markdown' })
                 .then(() => {
                     Logguer.info(`Mensaje enviado para el host: ${host}`);
                 })
@@ -101,56 +98,9 @@ async function ejecutarMonitor() {
     }
 }
 
-// Función de limpieza y cierre graceful
-function gracefulShutdown(reason) {
-    if (isShuttingDown) return;
-    
-    isShuttingDown = true;
-    Logguer.info(`Iniciando cierre graceful: ${reason}`);
-    
-    // Limpiar el intervalo
-    if (intervalId) {
-        clearInterval(intervalId);
-        intervalId = null;
-        Logguer.info('Intervalo de monitoreo detenido');
-    }
-    
-    // Opcional: enviar mensaje de despedida a Telegram
-    const despedida = `🔴 *Monitor finalizado*\n⏰ ${new Date().toLocaleString('es-ES')}\nRazón: ${reason}`;
-    
-    sendMessageTelegram(chatId, despedida, { parse_mode: 'Markdown' })
-        .catch(error => Logguer.error('Error enviando mensaje de cierre:', error))
-        .finally(() => {
-            Logguer.info('Proceso finalizado correctamente');
-            process.exit(0);
-        });
-    
-    // Timeout de seguridad para forzar cierre después de 5 segundos
-    setTimeout(() => {
-        Logguer.warn('Forzando cierre después de timeout');
-        process.exit(1);
-    }, 5000);
-}
-
-// Manejadores de señales para cierre graceful
-process.on('SIGINT', () => gracefulShutdown('Señal SIGINT (Ctrl+C)'));
-process.on('SIGTERM', () => gracefulShutdown('Señal SIGTERM'));
-process.on('SIGHUP', () => gracefulShutdown('Señal SIGHUP'));
-
-// Manejador de errores no capturados
-process.on('uncaughtException', (error) => {
-    Logguer.error('Error no capturado:', error);
-    gracefulShutdown('Error no capturado');
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-    Logguer.error('Promise rechazada no manejada:', reason);
-    gracefulShutdown('Promise rechazada');
-});
-
 // Función para iniciar el monitor periódico
 function iniciarMonitor() {
-    const intervaloMinutos = 15;
+    const intervaloMinutos = 1;
     const intervaloMs = intervaloMinutos * 60 * 1000; // 5 minutos en milisegundos
     
     Logguer.info(`Iniciando monitor cada ${intervaloMinutos} minutos`);
@@ -164,7 +114,7 @@ function iniciarMonitor() {
     // Mensaje de inicio a Telegram
     const mensajeInicio = `🟢 *Monitor iniciado*\n⏰ Frecuencia: Cada ${intervaloMinutos} minutos\n📊 Monitoreo activo`;
     
-    sendMessageTelegram(chatId, mensajeInicio, { parse_mode: 'Markdown' })
+    notifier.sendTelegram(chatId, mensajeInicio, { parse_mode: 'Markdown' })
         .then(() => Logguer.info('Mensaje de inicio enviado'))
         .catch(error => Logguer.error('Error enviando mensaje de inicio:', error));
 }

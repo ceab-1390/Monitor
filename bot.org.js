@@ -1,10 +1,9 @@
 require('dotenv').config();
 const Logger = require('./Logger/Logger');
-const { Telegraf } = require('telegraf');
+const {Telegraf} = require('telegraf');
 const fs = require('fs');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
-Logger.debug('Token del bot cargado:', process.env.BOT_TOKEN);
 
 // Función para enviar mensajes a un chat específico
 async function sendTelegramMessage(chatId, message) {
@@ -32,11 +31,9 @@ async function enviarImagenTelegram(imagePath, caption = '', chatId = process.en
 
 module.exports = { bot, sendTelegramMessage, enviarImagenTelegram };
 
-// Ejemplo: responde a /start
-bot.start((ctx) => ctx.reply('¡Hola! Soy tu bot de Monitor.'));
+bot.start((ctx) => ctx.reply('¡Hola! Soy tu bot de Monitor.' + ctx.from.id));
 
-// Puedes enviar un mensaje a un chat específico así:
-// bot.telegram.sendMessage(CHAT_ID, 'Mensaje de prueba');
+
 
 bot.launch();
 
