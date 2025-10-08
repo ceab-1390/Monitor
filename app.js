@@ -21,6 +21,7 @@ function enviarEmailTest(){
 
 
 async function monitor(){
+
     let IntervalToResend = process.env.INTERVAL_TO_RESEND || 30; //minutos
     let isSentCpu = false;
     let isSentMem = false;
@@ -67,12 +68,12 @@ async function monitor(){
                     const diffMinutes = Math.floor((now - lastTime) / 60000); // Diferencia en minutos
                     if (IntervalToResend < diffMinutes || !isSentCpu){
                         mensajeTg = Templates.telegramAlertTemplate(alertParams);
-                        let envioTG = await notifier.sendTelegram(chatId,mensajeTg);
+                        //let envioTG = await notifier.sendTelegram(chatId,mensajeTg);
                         messageEmail = Templates.mailAlertTemplate(alertParams);
                         let envioEmail = await notifier.sendGmail(messageEmail,emailReciber);
                         Logger.debug(envioEmail);
                         Logger.info(`Alerta de CPU enviada para el host ${host}`);
-                        await InfluxDB.saveSentNotification(host,'cpu',envioTG.channel);
+                        //await InfluxDB.saveSentNotification(host,'cpu',envioTG.channel);
                     }else{
                         Logger.info(`Alerta de CPU ya enviada para el host ${host}, esperando ${IntervalToResend - diffMinutes} Minutos para reenvío.`);
                     }
@@ -95,12 +96,12 @@ async function monitor(){
                     const diffMinutes = Math.floor((now - lastTime) / 60000);
                     if (IntervalToResend < diffMinutes || !isSentMem){
                         mensajeTg = Templates.telegramAlertTemplate(alertParams);
-                        await notifier.sendTelegram(chatId,mensajeTg)
+                        //await notifier.sendTelegram(chatId,mensajeTg)
                         messageEmail = Templates.mailAlertTemplate(alertParams);
                         let envioEmail = await notifier.sendGmail(messageEmail,emailReciber);
                         Logger.debug(envioEmail);
                         await InfluxDB.saveSentNotification(host,'memoria','telegram');
-                        Logger.info(`Alerta de Memoria enviada para el host ${host}`);
+                        //Logger.info(`Alerta de Memoria enviada para el host ${host}`);
                     }else{
                         Logger.info(`Alerta de Memoria ya enviada para el host ${host}, esperando ${IntervalToResend - diffMinutes } para reenvío.`);
                     }
@@ -126,12 +127,12 @@ async function monitor(){
                         const diffMinutes = Math.floor((now - lastTime) / 60000);
                         if (IntervalToResend < diffMinutes || !isSentDisk){
                             mensajeTg = Templates.telegramAlertTemplate(alertParams);
-                            await notifier.sendTelegram(chatId,mensajeTg)
+                            //await notifier.sendTelegram(chatId,mensajeTg)
                             messageEmail = Templates.mailAlertTemplate(alertParams);
                             let envioEmail = await notifier.sendGmail(messageEmail,emailReciber)
                             Logger.debug(envioEmail);
                             await InfluxDB.saveSentNotification(host,`disco_${path.replace(/\//g, '_')}`,'telegram');
-                            Logger.info(`Alerta de Disco enviada para el host ${host} en el path ${path}`);
+                            //Logger.info(`Alerta de Disco enviada para el host ${host} en el path ${path}`);
                         }else{
                             Logger.info(`Alerta de Disco ya enviada para el host ${host} en el path ${path}, esperando ${IntervalToResend - diffMinutes } para reenvío.`);
                         }
@@ -154,12 +155,12 @@ async function monitor(){
                     const diffMinutes = Math.floor((now - lastTime) / 60000);
                     if (IntervalToResend < diffMinutes || !isSentElementor){
                         mensajeTg = Templates.telegramAlertTemplate(alertParams);
-                        await notifier.sendTelegram(chatId,mensajeTg)
+                        //await notifier.sendTelegram(chatId,mensajeTg)
                         messageEmail = Templates.mailAlertTemplate(alertParams);
                         let envioEmail = await notifier.sendGmail(messageEmail,emailReciber);
                         Logger.debug(envioEmail);
                         await InfluxDB.saveSentNotification(host,'elementor','telegram');
-                        Logger.info(`Alerta de Elementor enviada para el host ${host}`);
+                        //Logger.info(`Alerta de Elementor enviada para el host ${host}`);
                     }else{
                         Logger.info(`Alerta de Elementor ya enviada para el host ${host}, esperando ${IntervalToResend - diffMinutes } para reenvío.`);
                     }
