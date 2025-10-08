@@ -60,7 +60,7 @@ async function monitor(){
                             timestamp : date
                         };
                     isSentCpu = await InfluxDB.getSentNotifications(host,'cpu','telegram');
-                    const lastTime = new Date(isSentCpu.time);
+                    const lastTime = new Date(isSentCpu.time) || new Date();
                     const now = new Date();
                     const diffMinutes = Math.floor((now - lastTime) / 60000); // Diferencia en minutos
                     if (IntervalToResend < diffMinutes || !isSentCpu){
@@ -87,7 +87,7 @@ async function monitor(){
                             timestamp : date
                         };
                     isSentMem = await InfluxDB.getSentNotifications(host,'memoria','telegram');
-                    const lastTime = new Date(isSentMem.time);
+                    const lastTime = new Date(isSentMem.time) || new Date();
                     const now = new Date();
                     const diffMinutes = Math.floor((now - lastTime) / 60000);
                     if (IntervalToResend < diffMinutes || !isSentMem){
@@ -117,7 +117,7 @@ async function monitor(){
                                 timestamp : date
                             };
                         isSentDisk = await InfluxDB.getSentNotifications(host,`disco_${path.replace(/\//g, '_')}`,'telegram');
-                        const lastTime = new Date(isSentDisk.time);
+                        const lastTime = new Date(isSentDisk.time) || new Date();
                         const now = new Date();
                         const diffMinutes = Math.floor((now - lastTime) / 60000);
                         if (IntervalToResend < diffMinutes || !isSentDisk){
@@ -144,7 +144,7 @@ async function monitor(){
                             timestamp : date
                         };
                     isSentElementor = await InfluxDB.getSentNotifications(host,'elementor','telegram');
-                    const lastTime = new Date(isSentElementor.time);
+                    const lastTime = new Date(isSentElementor.time) || new Date();
                     const now = new Date();
                     const diffMinutes = Math.floor((now - lastTime) / 60000);
                     if (IntervalToResend < diffMinutes || !isSentElementor){
