@@ -32,6 +32,9 @@ class NotificationService {
 
   // Enviar solo por Gmail
   async sendGmail(message, email = null) {
+    this.gmail.verify().then((verify) =>{
+      Logger.debug(`Verificando el transporter de gmail ${verify}`)
+    })
     return await this.gmail.send(message, email);
   }
 
