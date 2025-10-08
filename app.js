@@ -37,6 +37,7 @@ async function monitor(){
         minute: '2-digit',
         second: '2-digit'
     });
+    let IntervalExpired = (new Date(Date.now() - (process.env.INTERVAL_TO_RESEND + 2) * 60000))
     const testConnection = await InfluxDB.testConnection();
     if (!testConnection) {
         Logguer.error('No se pudo conectar a InfluxDB. Saliendo...');
@@ -59,7 +60,7 @@ async function monitor(){
                             umbral : umbralCpu,
                             timestamp : date
                         };
-                    isSentCpu = await InfluxDB.getSentNotifications(host,'cpu','telegram') || {time : new Date()};
+                    isSentCpu = await InfluxDB.getSentNotifications(host,'cpu','telegram') || {time : new Date(IntervalExpired)};
                     Logger.debug(`Valores extraidos de influx para alertas enviadas de CPU ${isSentCpu.time}`)
                     const lastTime = new Date(isSentCpu.time);
                     const now = new Date();
@@ -87,7 +88,7 @@ async function monitor(){
                             umbral : umbralMem,
                             timestamp : date
                         };
-                    isSentMem = await InfluxDB.getSentNotifications(host,'memoria','telegram') || {time : new Date()};
+                    isSentMem = await InfluxDB.getSentNotifications(host,'memoria','telegram') || {time : new Date(IntervalExpired)};
                     const lastTime = new Date(isSentMem.time);
                     const now = new Date();
                     const diffMinutes = Math.floor((now - lastTime) / 60000);
@@ -117,7 +118,7 @@ async function monitor(){
                                 umbral : umbralDisk,
                                 timestamp : date
                             };
-                        isSentDisk = await InfluxDB.getSentNotifications(host,`disco_${path.replace(/\//g, '_')}`,'telegram') || {time : new Date()};
+                        isSentDisk = await InfluxDB.getSentNotifications(host,`disco_${path.replace(/\//g, '_')}`,'telegram') || {time : new Date(IntervalExpired)};
                         const lastTime = new Date(isSentDisk.time);
                         const now = new Date();
                         const diffMinutes = Math.floor((now - lastTime) / 60000);
@@ -144,7 +145,7 @@ async function monitor(){
                             umbral : umbralElementor,
                             timestamp : date
                         };
-                    isSentElementor = await InfluxDB.getSentNotifications(host,'elementor','telegram') || {time : new Date()};
+                    isSentElementor = await InfluxDB.getSentNotifications(host,'elementor','telegram') || {time : new Date(IntervalExpired)};
                     const lastTime = new Date(isSentElementor.time);
                     const now = new Date();
                     const diffMinutes = Math.floor((now - lastTime) / 60000);
