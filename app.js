@@ -60,7 +60,8 @@ async function monitor(){
                             timestamp : date
                         };
                     isSentCpu = await InfluxDB.getSentNotifications(host,'cpu','telegram');
-                    isSentCpu == 0 ? isSentCpu.time = '' : isSentCpu;
+                    Logger.debug(`Valores extraidos de influx para alertas enviadas de CPU ${isSentCpu.time}`)
+                    isSentCpu.time === 'undefined' ? isSentCpu.time = '' : isSentCpu.time;
                     const lastTime = new Date(isSentCpu.time);
                     const now = new Date();
                     const diffMinutes = Math.floor((now - lastTime) / 60000); // Diferencia en minutos
@@ -88,7 +89,7 @@ async function monitor(){
                             timestamp : date
                         };
                     isSentMem = await InfluxDB.getSentNotifications(host,'memoria','telegram');
-                    isSentMem == 0 ? isSentMem.time = '' : isSentMem;
+                    isSentMem.time === 'undefined' ? isSentMem.time = '' : isSentMem.time;
                     const lastTime = new Date(isSentMem.time);
                     const now = new Date();
                     const diffMinutes = Math.floor((now - lastTime) / 60000);
@@ -119,7 +120,7 @@ async function monitor(){
                                 timestamp : date
                             };
                         isSentDisk = await InfluxDB.getSentNotifications(host,`disco_${path.replace(/\//g, '_')}`,'telegram');
-                        isSentDisk == 0 ? isSentDisk.time = '' : isSentDisk;
+                        isSentDisk.time === 'undefined' ? isSentDisk.time = '' : isSentDisk.time;
                         const lastTime = new Date(isSentDisk.time);
                         const now = new Date();
                         const diffMinutes = Math.floor((now - lastTime) / 60000);
@@ -147,7 +148,7 @@ async function monitor(){
                             timestamp : date
                         };
                     isSentElementor = await InfluxDB.getSentNotifications(host,'elementor','telegram');
-                    isSentElementor == 0 ? isSentElementor.time = '' : isSentElementor;
+                    isSentElementor.time === 'undefined' ? isSentElementor.time = '' : isSentElementor.time;
                     const lastTime = new Date(isSentElementor.time);
                     const now = new Date();
                     const diffMinutes = Math.floor((now - lastTime) / 60000);
