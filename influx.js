@@ -99,7 +99,59 @@ class InfluxDB {
       Logger.error('❌ Error obteniendo datos de InfluxDB:', error.message);
       return [];
     };
-  }
+  };
+  static async getElementorErrors(host) {
+    try {
+      const rawData = await influx.query(`SELECT
+        LAST(count) AS count,
+        log_file AS log,
+        host
+        FROM elementor_errors
+        WHERE host = '${host}'`
+      );
+      let values = {};
+      values.count = rawData[0]?.count || 0;
+      values.log = rawData[0]?.log || 'N/A';
+      return values;
+    } catch (error) {
+      Logger.error('❌ Error obteniendo datos de InfluxDB:', error.message);
+      return [];
+    };
+  };
+  static async saveSentNotification(host, metric, channel) {
+    try {
+      let saveItem = await influx.writePoints([
+        {
+          measurement: 'notifications_sent',
+          tags: { host, metric, channel },
+          fields: { count: 1 },
+          timestamp: new Date()
+        }
+      ]);
+    return saveItem;
+    } catch (error) {
+      Logger.error('❌ Error guardando notificación en InfluxDB:', error.message);
+    }
+  };
+  static async getSentNotifications(host, metric, channel) {
+    try {
+      const result = await influx.query(`SELECT
+      LAST(count),
+      "time",
+      "metric",
+      "channel",
+      "host"
+      FROM "notifications_sent"
+      WHERE host = '${host}'
+      AND metric = '${metric}'
+      AND channel = '${channel}'
+      `);
+      return result[0];
+    } catch (error) {
+      Logger.error('❌ Error obteniendo notificaciones de InfluxDB:', error.message);
+      return 0;
+    }
+  };
 }
 
 
