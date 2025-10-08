@@ -60,8 +60,8 @@ async function monitor(){
                             timestamp : date
                         };
                     isSentCpu = await InfluxDB.getSentNotifications(host,'cpu','telegram');
-                    Logger.debug(`Valores extraidos de influx para alertas enviadas de CPU ${isSentCpu.time}`)
                     isSentCpu.time === 'undefined' ? isSentCpu.time = '' : isSentCpu.time;
+                    Logger.debug(`Valores extraidos de influx para alertas enviadas de CPU ${isSentCpu.time}`)
                     const lastTime = new Date(isSentCpu.time);
                     const now = new Date();
                     const diffMinutes = Math.floor((now - lastTime) / 60000); // Diferencia en minutos
