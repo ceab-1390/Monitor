@@ -39,7 +39,7 @@ class GmailSender {
 
       await this.transporter.sendMail(mailOptions);
       
-      console.log(`✅ Gmail enviado a: ${email}`);
+      Logger.info(`✅ Gmail enviado a: ${email}`);
       return { 
         success: true, 
         channel: 'gmail', 
@@ -47,7 +47,7 @@ class GmailSender {
       };
       
     } catch (error) {
-      console.error('❌ Error enviando Gmail:', error.message);
+      Logger.error('❌ Error enviando Gmail:', error.message);
       return { 
         success: false, 
         channel: 'gmail', 
