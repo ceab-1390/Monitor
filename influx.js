@@ -17,7 +17,6 @@ class InfluxDB {
     try {
       const names = await influx.getDatabaseNames();
       if (names.includes(process.env.INFLUX_DB)) {
-        Logger.log('✅ Conexión a InfluxDB exitosa');
         return true;
       } else {
         Logger.error(`❌ La base de datos ${process.env.INFLUX_DB} no existe`);
