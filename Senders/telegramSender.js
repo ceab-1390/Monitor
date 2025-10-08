@@ -20,12 +20,12 @@ class TelegramSender {
   }
 
   // Enviar mensaje por Telegram
-  async send(message, chatId = config.telegram.defaultChatId) {
+  async send(chatId, message) {
     try {
       // Validar antes de enviar
       //this.validateChatId(chatId);
       
-      await this.bot.telegram.sendMessage(message,chatId);
+      await this.bot.telegram.sendMessage(chatId, message, { parse_mode: 'Markdown' });
       
       Logger.log(`✅ Telegram enviado a: ${chatId}`);
       return { 

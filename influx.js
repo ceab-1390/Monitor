@@ -11,6 +11,98 @@ const influx = new Influx.InfluxDB({
   password: process.env.INFLUX_PASSWORD,
 });
 
+
+class InfluxDB {
+  static async testConnection() {
+    try {
+      const names = await influx.getDatabaseNames();
+      if (names.includes(process.env.INFLUX_DB)) {
+        Logger.log('✅ Conexión a InfluxDB exitosa');
+        return true;
+      } else {
+        Logger.error(`❌ La base de datos ${process.env.INFLUX_DB} no existe`);
+        return false;
+      }
+    } catch (error) {
+      Logger.error('❌ Error conectando a InfluxDB:', error.message);
+      return false;
+    }
+  };
+  static async getHosts() {
+    try {
+      const hosts = await influx.query(`
+        SHOW TAG VALUES FROM "cpu" WITH KEY = "host"
+      `);
+      return hosts.map(h => h.value);
+    } catch (error) {
+      Logger.error('❌ Error obteniendo hosts de InfluxDB:', error.message);
+      return [];
+    }   
+  };
+  static async getCpuUsage(host) {
+    try {
+      const rawData = await influx.query(`SELECT 
+        last("usage_idle") as cpu_idle,
+        last("usage_system") as cpu_system,
+        last("usage_user") as cpu_user 
+        FROM "cpu" 
+        WHERE "host" = '${host}'`);
+      let values = {};
+      values.idle = formatPercent(rawData[0].cpu_idle);
+      values.system = formatPercent(rawData[0].cpu_system);
+      values.user = formatPercent(rawData[0].cpu_user);
+      values.totalUsage = rawData[0].cpu_idle ? formatPercent(100 - rawData[0].cpu_idle) : 'N/A';
+      return values;
+    } catch (error) {
+      Logger.error('❌ Error obteniendo datos de InfluxDB:', error.message);
+      return [];
+    }
+  };
+  static async getMemUsage(host) {
+    try {
+      const rawData = await influx.query(`SELECT 
+        last("used") as mem_used,
+        last("free") as mem_free,
+        last("total") as mem_total 
+        FROM "mem" 
+        WHERE "host" = '${host}'`);
+      let values = {};
+      values.used = formatBytes(rawData[0].mem_used);
+      values.free = formatBytes(rawData[0].mem_free);
+      values.total = formatBytes(rawData[0].mem_total);
+      values.usagePercent = rawData[0].mem_used && rawData[0].mem_total ? 
+        formatPercent((rawData[0].mem_used / rawData[0].mem_total) * 100) : 'N/A';
+      return values;
+    } catch (error) {
+      Logger.error('❌ Error obteniendo datos de InfluxDB:', error.message);
+      return [];
+    };
+  }
+  static async getDiskUsage(host, path) {
+    try {
+      const rawData = await influx.query(`SELECT
+        last("used") as disk_used,
+        last("free") as disk_free,
+        last("total") as disk_total
+        FROM "disk" 
+        WHERE "host" = '${host}'
+        AND path = '${path}'
+      `);
+      let values = {};
+      values.used = formatBytes(rawData[0].disk_used);
+      values.free = formatBytes(rawData[0].disk_free);
+      values.total = formatBytes(rawData[0].disk_total);
+      values.usagePercent = rawData[0].disk_used && rawData[0].disk_total ? 
+        formatPercent((rawData[0].disk_used / rawData[0].disk_total) * 100) : 'N/A';
+      return values;
+    } catch (error) {
+      Logger.error('❌ Error obteniendo datos de InfluxDB:', error.message);
+      return [];
+    };
+  }
+}
+
+
 // Función para formatear bytes
 function formatBytes(bytes, decimals = 2) {
     if (bytes === 0 || bytes === 'N/A' || bytes === null || bytes === undefined) return 'N/A';
@@ -61,8 +153,7 @@ async function obtenerDatosPorHost() {
 
       // Obtener datos de disco
       const discoRaw = await influx.query(`
-        SELECT last("used") as disk_used, last("free") as disk_free, last("total") as disk_total 
-        FROM "disk" 
+        SELECT last("used") as disk_used, last("free") as disk_free, last("total") as disk_total FROM "disk" 
         WHERE "host" = '${host}'
       `);
       
@@ -160,4 +251,4 @@ async function obtenerDatosPorHost() {
   }
 }
 
-module.exports = { obtenerDatosPorHost, formatBytes, formatPercent };
+module.exports = {InfluxDB };

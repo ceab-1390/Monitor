@@ -7,8 +7,8 @@ const config = {
     defaultChatId: process.env.CHAT_ID
   },
   gmail: {
-    email: process.env.GMAIL_EMAIL,
-    password: process.env.GMAIL_PASSWORD
+    email: process.env.G_EMAIL,
+    password: process.env.G_PASSWD
   }
 };
 

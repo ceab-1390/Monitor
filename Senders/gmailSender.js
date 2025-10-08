@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const { config } = require('../Config/config');
+const Logger = require('../Logger/Logger');
 
 class GmailSender {
   constructor() {
@@ -15,6 +16,7 @@ class GmailSender {
 
   // Validar formato de email
   validateEmail(email) {
+    Logger.debug(`Validando email: ${email}`);
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {
       throw new Error('❌ Email válido es requerido');
@@ -23,7 +25,7 @@ class GmailSender {
   }
 
   // Enviar mensaje por Gmail
-  async send(message, email = config.gmail.email) {
+  async send(message, email) {
     try {
       // Validar antes de enviar
       this.validateEmail(email);
@@ -32,17 +34,7 @@ class GmailSender {
         from: `Sistema de Notificaciones <${config.gmail.email}>`,
         to: email,
         subject: '🔔 Notificación del Sistema',
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px;">
-            <h2 style="color: #333;">Notificación del Sistema</h2>
-            <div style="background: #f5f5f5; padding: 15px; border-radius: 5px;">
-              ${message.replace(/\n/g, '<br>')}
-            </div>
-            <p style="color: #666; margin-top: 20px;">
-              Mensaje enviado automáticamente
-            </p>
-          </div>
-        `
+        html: message
       };
 
       await this.transporter.sendMail(mailOptions);
