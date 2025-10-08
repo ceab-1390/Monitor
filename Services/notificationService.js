@@ -16,9 +16,6 @@ class NotificationService {
     if (validateConfig('gmail')){
         //initialize Gmail sender
         this.gmail = new GmailSender();
-        this.gmail.verify().then((verify) =>{
-          Logger.debug(`Verificando el transporter de gmail ${verify}`)
-        })
         Logger.log(`🚀 Servicio de Notificaciones ${this.gmail.name}  iniciado`);
     }
     
@@ -32,7 +29,7 @@ class NotificationService {
 
   // Enviar solo por Gmail
   async sendGmail(message, email = null) {
-    this.gmail.verify().then((verify) =>{
+    await this.gmail.verify().then((verify) =>{
       Logger.debug(`Verificando el transporter de gmail ${verify}`)
     })
     return await this.gmail.send(message, email);
