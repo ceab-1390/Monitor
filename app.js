@@ -60,7 +60,7 @@ async function monitor(){
                             timestamp : date
                         };
                     isSentCpu = await InfluxDB.getSentNotifications(host,'cpu','telegram');
-                    isSentCpu.time === 'undefined' ? isSentCpu.time = '' : isSentCpu.time;
+                    isSentCpu === 'undefined' ? isSentCpu.time = '' : isSentCpu;
                     Logger.debug(`Valores extraidos de influx para alertas enviadas de CPU ${isSentCpu.time}`)
                     const lastTime = new Date(isSentCpu.time);
                     const now = new Date();
@@ -89,7 +89,7 @@ async function monitor(){
                             timestamp : date
                         };
                     isSentMem = await InfluxDB.getSentNotifications(host,'memoria','telegram');
-                    isSentMem.time === 'undefined' ? isSentMem.time = '' : isSentMem.time;
+                    isSentMem === 'undefined' ? isSentMem.time = '' : isSentMem;
                     const lastTime = new Date(isSentMem.time);
                     const now = new Date();
                     const diffMinutes = Math.floor((now - lastTime) / 60000);
@@ -120,7 +120,7 @@ async function monitor(){
                                 timestamp : date
                             };
                         isSentDisk = await InfluxDB.getSentNotifications(host,`disco_${path.replace(/\//g, '_')}`,'telegram');
-                        isSentDisk.time === 'undefined' ? isSentDisk.time = '' : isSentDisk.time;
+                        isSentDisk === 'undefined' ? isSentDisk.time = '' : isSentDisk;
                         const lastTime = new Date(isSentDisk.time);
                         const now = new Date();
                         const diffMinutes = Math.floor((now - lastTime) / 60000);
@@ -148,7 +148,7 @@ async function monitor(){
                             timestamp : date
                         };
                     isSentElementor = await InfluxDB.getSentNotifications(host,'elementor','telegram');
-                    isSentElementor.time === 'undefined' ? isSentElementor.time = '' : isSentElementor.time;
+                    isSentElementor === 'undefined' ? isSentElementor.time = '' : isSentElementor;
                     const lastTime = new Date(isSentElementor.time);
                     const now = new Date();
                     const diffMinutes = Math.floor((now - lastTime) / 60000);
