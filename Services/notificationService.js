@@ -16,6 +16,9 @@ class NotificationService {
     if (validateConfig('gmail')){
         //initialize Gmail sender
         this.gmail = new GmailSender();
+        this.gmail.verify().then((verify) =>{
+          Logger.debug(`Verificando el transporter de gmail ${verify}`)
+        })
         Logger.log(`🚀 Servicio de Notificaciones ${this.gmail.name}  iniciado`);
     }
     
@@ -32,7 +35,8 @@ class NotificationService {
     return await this.gmail.send(message, email);
   }
 
-  // Verificar estado de los servicios
+  // Verificar estado de los serviciosconst { Log } = require('@influxdata/influxdb-client');
+
   getStatus() {
     return {
       telegram: {
@@ -46,5 +50,6 @@ class NotificationService {
     };
   }
 }
+
 
 module.exports = { NotificationService };

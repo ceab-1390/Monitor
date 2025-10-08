@@ -14,6 +14,7 @@ class GmailSender {
     this.name = 'Gmail';
   }
 
+
   // Validar formato de email
   validateEmail(email) {
     Logger.debug(`Validando email: ${email}`);
@@ -22,6 +23,11 @@ class GmailSender {
       throw new Error('❌ Email válido es requerido');
     }
     return true;
+  }
+
+  async verify(){
+    let verify = await this.transporter.verify()
+    return verify;
   }
 
   // Enviar mensaje por Gmail
