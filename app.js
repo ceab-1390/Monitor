@@ -69,7 +69,8 @@ async function monitor(){
                         mensajeTg = Templates.telegramAlertTemplate(alertParams);
                         let envioTG = await notifier.sendTelegram(chatId,mensajeTg);
                         messageEmail = Templates.mailAlertTemplate(alertParams);
-                        await notifier.sendGmail(messageEmail,emailReciber);
+                        let envioEmail = await notifier.sendGmail(messageEmail,emailReciber);
+                        Logger.debug(envioEmail);
                         Logger.info(`Alerta de CPU enviada para el host ${host}`);
                         await InfluxDB.saveSentNotification(host,'cpu',envioTG.channel);
                     }else{
@@ -96,7 +97,8 @@ async function monitor(){
                         mensajeTg = Templates.telegramAlertTemplate(alertParams);
                         await notifier.sendTelegram(chatId,mensajeTg)
                         messageEmail = Templates.mailAlertTemplate(alertParams);
-                        await notifier.sendGmail(messageEmail,emailReciber);
+                        let envioEmail = await notifier.sendGmail(messageEmail,emailReciber);
+                        Logger.debug(envioEmail);
                         await InfluxDB.saveSentNotification(host,'memoria','telegram');
                         Logger.info(`Alerta de Memoria enviada para el host ${host}`);
                     }else{
@@ -126,7 +128,8 @@ async function monitor(){
                             mensajeTg = Templates.telegramAlertTemplate(alertParams);
                             await notifier.sendTelegram(chatId,mensajeTg)
                             messageEmail = Templates.mailAlertTemplate(alertParams);
-                            await notifier.sendGmail(messageEmail,emailReciber)
+                            let envioEmail = await notifier.sendGmail(messageEmail,emailReciber)
+                            Logger.debug(envioEmail);
                             await InfluxDB.saveSentNotification(host,`disco_${path.replace(/\//g, '_')}`,'telegram');
                             Logger.info(`Alerta de Disco enviada para el host ${host} en el path ${path}`);
                         }else{
@@ -153,7 +156,8 @@ async function monitor(){
                         mensajeTg = Templates.telegramAlertTemplate(alertParams);
                         await notifier.sendTelegram(chatId,mensajeTg)
                         messageEmail = Templates.mailAlertTemplate(alertParams);
-                        await notifier.sendGmail(messageEmail,emailReciber);
+                        let envioEmail = await notifier.sendGmail(messageEmail,emailReciber);
+                        Logger.debug(envioEmail);
                         await InfluxDB.saveSentNotification(host,'elementor','telegram');
                         Logger.info(`Alerta de Elementor enviada para el host ${host}`);
                     }else{
