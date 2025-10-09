@@ -1,5 +1,4 @@
 const { google } = require('googleapis');
-const nodemailer = require('nodemailer');
 const { config } = require('../Config/config');
 const Logger = require('../Logger/Logger');
 
@@ -12,57 +11,61 @@ class GmailSender {
     );
     
     this.oauth2Client.setCredentials({
-      refresh_token: config.gmailApi.refreshToken,
-      tls: {
-        rejectUnauthorized: false
-      }
+      refresh_token: config.gmailApi.refreshToken
     });
+    
+    this.gmail = google.gmail({ version: 'v1', auth: this.oauth2Client });
     this.name = 'Gmail';
   }
-  
+
   async send(message, email) {
-  try {
-    //this.validateEmail(email);
-    Logger.info('##################################################')
-    const { token } = await this.oauth2Client.getAccessToken();
-    Logger.info(`El nuevo token es: ${token}`)
+    try {
+      // Validar email
+      this.validateEmail(email);
+      
+      // Crear el mensaje en formato MIME
+      const messageBody = [
+        'Content-Type: text/html; charset=utf-8',
+        'MIME-Version: 1.0',
+        `To: ${email}`,
+        `From: Sistema de Notificaciones <${config.gmail.email}>`,
+        'Subject: Notificacion del Sistema',
+        '',
+        message
+      ].join('\n');
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        type: 'OAuth2',
-        user: config.gmailApi.email,
-        clientId: config.gmailApi.clientId,
-        clientSecret: config.gmailApi.secret, // ← ¡CORREGIDO!
-        accessToken: token,
-      }
-    });
+      // Codificar en base64 URL-safe
+      const encodedMessage = Buffer.from(messageBody)
+        .toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
 
-    const mailOptions = {
-      from: `Sistema de Notificaciones <${config.gmail.email}>`,
-      to: email,
-      subject: '🔔 Notificación del Sistema',
-      html: message
-    };
+      // Enviar usando Gmail API
+      const response = await this.gmail.users.messages.send({
+        userId: 'me',
+        requestBody: {
+          raw: encodedMessage
+        }
+      });
 
-    await transporter.sendMail(mailOptions);
-    
-    Logger.info(`✅ Gmail enviado a: ${email}`);
-    return { 
-      success: true, 
-      channel: 'gmail', 
-      recipient: email 
-    };
-    
-  } catch (error) {
-    Logger.error('❌ Error enviando Gmail:', error.message);
-    return { 
-      success: false, 
-      channel: 'gmail', 
-      error: error.message 
-    };
+      Logger.info(`✅ Gmail enviado a: ${email} - Message ID: ${response.data.id}`);
+      return { 
+        success: true, 
+        channel: 'gmail', 
+        recipient: email,
+        messageId: response.data.id
+      };
+      
+    } catch (error) {
+      Logger.error('❌ Error enviando Gmail:', error.message);
+      return { 
+        success: false, 
+        channel: 'gmail', 
+        error: error.message 
+      };
+    }
   }
-}
 
   // Validar formato de email
   validateEmail(email) {
@@ -74,31 +77,26 @@ class GmailSender {
     return true;
   }
 
-   async verify() {
-     try {
-       // Obtener access token fresco
-       const { token } = await this.oauth2Client.getAccessToken();
+  async verify() {
+    try {
+      // Verificar que podemos obtener un token y hacer una operación simple
+      const { token } = await this.oauth2Client.getAccessToken();
       
-       // Crear transporter para verificar
-       const transporter = nodemailer.createTransport({
-         service: 'gmail',
-         auth: {
-           type: 'OAuth2',
-           user: config.gmail.email,
-           clientId: config.gmailApi.clientId,
-           clientSecret: config.gmail.secret,
-           accessToken: token
-         }
-       });
+      // Verificar permisos listando labels (operación simple)
+      const response = await this.gmail.users.labels.list({
+        userId: 'me'
+      });
 
-       const verify = await transporter.verify();
-       Logger.info('✅ Conexión Gmail verificada');
-       return verify;
-     } catch (error) {
-       Logger.error('❌ Error verificando Gmail:', error.message);
-       throw error;
-     }
-   }
+      Logger.info('✅ Conexión Gmail API verificada');
+      return {
+        authenticated: true,
+        labels: response.data.labels ? response.data.labels.length : 0
+      };
+    } catch (error) {
+      Logger.error('❌ Error verificando Gmail API:', error.message);
+      throw error;
+    }
+  }
 }
 
 module.exports = { GmailSender };
