@@ -21,6 +21,7 @@
     "chartjs-node-canvas": "^5.0.0",
     "dotenv": "^17.2.2",
     "fs": "^0.0.1-security",
+    "googleapis": "^161.0.0",
     "influx": "^5.11.0",
     "nodemailer": "^7.0.7",
     "pdfkit": "^0.17.2",

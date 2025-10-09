@@ -1,6 +1,7 @@
 require('dotenv').config();
 const Logger = require('../Logger/Logger');
 
+
 const config = {
   telegram: {
     token: process.env.BOT_TOKEN,
@@ -9,6 +10,13 @@ const config = {
   gmail: {
     email: process.env.G_EMAIL,
     password: process.env.G_PASSWD
+  },
+  gmailApi: {
+    email: process.env.G_EMAIL,
+    clientId : process.env.GOOGLE_CLIENT_ID,
+    secret : process.env.GOOGLE_CLIENT_SECRET,
+    r_uri : process.env.GOOGLE_REDIRECT_URI,
+    refreshToken : process.env.GOOGLE_REFRESH_TOKEN
   }
 };
 
