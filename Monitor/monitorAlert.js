@@ -70,89 +70,89 @@ module.exports.alertas = async () =>{
 
                 let alertMem = await InfluxDB.getMemUsage(host);
                 umbralMem = process.env.MEMORY_ALERT_THRESHOLD;
-                // if (alertMem.usagePercent !== 'N/A' && parseFloat(alertMem.usagePercent) > parseFloat(umbralMem)){
-                //         const alertParams = {
-                //             clase : 'memoria',
-                //             metrica : `Memoria del host ${host.toUpperCase()}`,
-                //             magnitud : alertMem.usagePercent,
-                //             umbral : umbralMem,
-                //             timestamp : date
-                //         };
-                //     isSentMem = await InfluxDB.getSentNotifications(host,'memoria','telegram') || {time : new Date(IntervalExpired)};
-                //     const lastTime = new Date(isSentMem.time);
-                //     const now = new Date();
-                //     const diffMinutes = Math.floor((now - lastTime) / 60000);
-                //     if (IntervalToResend < diffMinutes || !isSentMem){
-                //         mensajeTg = Templates.telegramAlertTemplate(alertParams);
-                //         //await notifier.sendTelegram(chatId,mensajeTg)
-                //         messageEmail = Templates.mailAlertTemplate(alertParams);
-                //         let envioEmail = await notifier.sendGmail(messageEmail,emailReciber);
-                //         Logger.debug(envioEmail);
-                //         await InfluxDB.saveSentNotification(host,'memoria','telegram');
-                //         //Logger.info(`Alerta de Memoria enviada para el host ${host}`);
-                //     }else{
-                //         Logger.info(`Alerta de Memoria ya enviada para el host ${host}, esperando ${IntervalToResend - diffMinutes } para reenvío.`);
-                //     }
-                // }
+                if (alertMem.usagePercent !== 'N/A' && parseFloat(alertMem.usagePercent) > parseFloat(umbralMem)){
+                        const alertParams = {
+                            clase : 'memoria',
+                            metrica : `Memoria del host ${host.toUpperCase()}`,
+                            magnitud : alertMem.usagePercent,
+                            umbral : umbralMem,
+                            timestamp : date
+                        };
+                    isSentMem = await InfluxDB.getSentNotifications(host,'memoria','topicoMEM') || {time : new Date(IntervalExpired)};
+                    const lastTime = new Date(isSentMem.time);
+                    const now = new Date();
+                    const diffMinutes = Math.floor((now - lastTime) / 60000);
+                    if (IntervalToResend < diffMinutes || !isSentMem){
+                        mensajeTg = Templates.telegramAlertTemplate(alertParams);
+                        await notifier.sendTelegram(chatId,mensajeTg)
+                        messageEmail = Templates.mailAlertTemplate(alertParams);
+                        let envioEmail = await notifier.sendGmail(messageEmail,emailReciber);
+                        Logger.debug(envioEmail);
+                        await InfluxDB.saveSentNotification(host,'memoria','topicoMEM');
+                        Logger.info(`Alerta de Memoria enviada para el host ${host}`);
+                    }else{
+                        Logger.info(`Alerta de Memoria ya enviada para el host ${host}, esperando ${IntervalToResend - diffMinutes } para reenvío.`);
+                    }
+                }
 
-                // let pathToCheck = process.env.DISK_PATHS;
-                // let pathsArray = pathToCheck.split(',').map(path => path.trim());
-                // pathsArray.forEach(async (path,index) => {
-                //     Logger.debug(`Revisando path: ${path} del host ${host}`);
-                //     let alertDisk = await InfluxDB.getDiskUsage(host,path);
-                //     umbralDisk = process.env.DISK_ALERT_THRESHOLD;
-                //     if (alertDisk.usagePercent !== 'N/A' && parseFloat(alertDisk.usagePercent) > parseFloat(umbralDisk)){
-                //             const alertParams = {
-                //                 clase : 'disco',
-                //                 metrica : `Disco ${path} del host ${host.toUpperCase()}`,
-                //                 magnitud : alertDisk.usagePercent,
-                //                 umbral : umbralDisk,
-                //                 timestamp : date
-                //             };
-                //         isSentDisk = await InfluxDB.getSentNotifications(host,`disco_${path.replace(/\//g, '_')}`,'telegram') || {time : new Date(IntervalExpired)};
-                //         const lastTime = new Date(isSentDisk.time);
-                //         const now = new Date();
-                //         const diffMinutes = Math.floor((now - lastTime) / 60000);
-                //         if (IntervalToResend < diffMinutes || !isSentDisk){
-                //             mensajeTg = Templates.telegramAlertTemplate(alertParams);
-                //             //await notifier.sendTelegram(chatId,mensajeTg)
-                //             messageEmail = Templates.mailAlertTemplate(alertParams);
-                //             let envioEmail = await notifier.sendGmail(messageEmail,emailReciber)
-                //             Logger.debug(envioEmail);
-                //             await InfluxDB.saveSentNotification(host,`disco_${path.replace(/\//g, '_')}`,'telegram');
-                //             //Logger.info(`Alerta de Disco enviada para el host ${host} en el path ${path}`);
-                //         }else{
-                //             Logger.info(`Alerta de Disco ya enviada para el host ${host} en el path ${path}, esperando ${IntervalToResend - diffMinutes } para reenvío.`);
-                //         }
-                //     }
-                // });
+                let pathToCheck = process.env.DISK_PATHS;
+                let pathsArray = pathToCheck.split(',').map(path => path.trim());
+                pathsArray.forEach(async (path,index) => {
+                    Logger.debug(`Revisando path: ${path} del host ${host}`);
+                    let alertDisk = await InfluxDB.getDiskUsage(host,path);
+                    umbralDisk = process.env.DISK_ALERT_THRESHOLD;
+                    if (alertDisk.usagePercent !== 'N/A' && parseFloat(alertDisk.usagePercent) > parseFloat(umbralDisk)){
+                            const alertParams = {
+                                clase : 'disco',
+                                metrica : `Disco ${path} del host ${host.toUpperCase()}`,
+                                magnitud : alertDisk.usagePercent,
+                                umbral : umbralDisk,
+                                timestamp : date
+                            };
+                        isSentDisk = await InfluxDB.getSentNotifications(host,`disco_${path.replace(/\//g, '_')}`,'topicoDISK') || {time : new Date(IntervalExpired)};
+                        const lastTime = new Date(isSentDisk.time);
+                        const now = new Date();
+                        const diffMinutes = Math.floor((now - lastTime) / 60000);
+                        if (IntervalToResend < diffMinutes || !isSentDisk){
+                            mensajeTg = Templates.telegramAlertTemplate(alertParams);
+                            await notifier.sendTelegram(chatId,mensajeTg)
+                            messageEmail = Templates.mailAlertTemplate(alertParams);
+                            let envioEmail = await notifier.sendGmail(messageEmail,emailReciber)
+                            Logger.debug(envioEmail);
+                            await InfluxDB.saveSentNotification(host,`disco_${path.replace(/\//g, '_')}`,'topicoDISK');
+                            Logger.info(`Alerta de Disco enviada para el host ${host} en el path ${path}`);
+                        }else{
+                            Logger.info(`Alerta de Disco ya enviada para el host ${host} en el path ${path}, esperando ${IntervalToResend - diffMinutes } para reenvío.`);
+                        }
+                    }
+                });
 
-                // let alertElementor = await InfluxDB.getElementorErrors(host);
-                // umbralElementor = process.env.ELEMENTOR_ALERT_THRESHOLD;
-                // if (alertElementor.count !== 'N/A' && parseInt(alertElementor.count) > parseInt(umbralElementor)){
-                //         const alertParams = {
-                //             clase : 'elementor',
-                //             metrica : `Errores de estilos en Elementor del host ${host.toUpperCase()}`,
-                //             magnitud : alertElementor.count,
-                //             umbral : umbralElementor,
-                //             timestamp : date
-                //         };
-                //     isSentElementor = await InfluxDB.getSentNotifications(host,'elementor','telegram') || {time : new Date(IntervalExpired)};
-                //     const lastTime = new Date(isSentElementor.time);
-                //     const now = new Date();
-                //     const diffMinutes = Math.floor((now - lastTime) / 60000);
-                //     if (IntervalToResend < diffMinutes || !isSentElementor){
-                //         mensajeTg = Templates.telegramAlertTemplate(alertParams);
-                //         //await notifier.sendTelegram(chatId,mensajeTg)
-                //         messageEmail = Templates.mailAlertTemplate(alertParams);
-                //         let envioEmail = await notifier.sendGmail(messageEmail,emailReciber);
-                //         Logger.debug(envioEmail);
-                //         await InfluxDB.saveSentNotification(host,'elementor','telegram');
-                //         //Logger.info(`Alerta de Elementor enviada para el host ${host}`);
-                //     }else{
-                //         Logger.info(`Alerta de Elementor ya enviada para el host ${host}, esperando ${IntervalToResend - diffMinutes } para reenvío.`);
-                //     }
-                // };
+                let alertElementor = await InfluxDB.getElementorErrors(host);
+                umbralElementor = process.env.ELEMENTOR_ALERT_THRESHOLD;
+                if (alertElementor.count !== 'N/A' && parseInt(alertElementor.count) > parseInt(umbralElementor)){
+                        const alertParams = {
+                            clase : 'elementor',
+                            metrica : `Errores de estilos en Elementor del host ${host.toUpperCase()}`,
+                            magnitud : alertElementor.count,
+                            umbral : umbralElementor,
+                            timestamp : date
+                        };
+                    isSentElementor = await InfluxDB.getSentNotifications(host,'elementor','topicoELEMENTOR') || {time : new Date(IntervalExpired)};
+                    const lastTime = new Date(isSentElementor.time);
+                    const now = new Date();
+                    const diffMinutes = Math.floor((now - lastTime) / 60000);
+                    if (IntervalToResend < diffMinutes || !isSentElementor){
+                        mensajeTg = Templates.telegramAlertTemplate(alertParams);
+                        await notifier.sendTelegram(chatId,mensajeTg)
+                        messageEmail = Templates.mailAlertTemplate(alertParams);
+                        let envioEmail = await notifier.sendGmail(messageEmail,emailReciber);
+                        Logger.debug(envioEmail);
+                        await InfluxDB.saveSentNotification(host,'elementor','topicoELEMENTOR');
+                        Logger.info(`Alerta de Elementor enviada para el host ${host}`);
+                    }else{
+                        Logger.info(`Alerta de Elementor ya enviada para el host ${host}, esperando ${IntervalToResend - diffMinutes } para reenvío.`);
+                    }
+                };
             });
         }
     }
