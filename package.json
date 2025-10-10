@@ -18,6 +18,7 @@
   "homepage": "https://github.com/ceab-1390/Monitor#readme",
   "dependencies": {
     "@influxdata/influxdb-client": "^1.35.0",
+    "axios": "^1.12.2",
     "chartjs-node-canvas": "^5.0.0",
     "dotenv": "^17.2.2",
     "fs": "^0.0.1-security",
