@@ -2,7 +2,7 @@ const { Telegraf } = require('telegraf');
 const Logger = require('../Logger/Logger');
 const { config } = require('../Config/config');
 
-class TelegramSender {
+class TelegramClass {
   constructor() {
     this.bot = new Telegraf(config.telegram.token) || null;
     this.name = 'Telegram';
@@ -44,5 +44,7 @@ class TelegramSender {
     }
   }
 }
+
+let TelegramSender = new TelegramClass()
 
 module.exports = { TelegramSender };

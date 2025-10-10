@@ -1,12 +1,11 @@
 const Logger = require('../Logger/Logger');
 const {InfluxDB} = require('../influx');
-const { NotificationService }   = require('../Services/notificationService');
-const notifier = new NotificationService();
+const { NotificationService } = require('../Services/notificationService');
+const notifier = NotificationService;
 const {Templates} = require('../Templates/Templates');
 
 
 module.exports.alertas = async () =>{
-
     let IntervalToResend = process.env.INTERVAL_TO_RESEND || 30; //minutos
     let isSentCpu = false;
     let isSentMem = false;
@@ -30,6 +29,7 @@ module.exports.alertas = async () =>{
         return;
     }else{
         const hosts = await InfluxDB.getHosts();
+        Logger.debug(`Hosts encontrados: ${hosts}`)
         const chatId = process.env.CHAT_ID;
         let mensajeTg = '';
         let messageEmail = '';

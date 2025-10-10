@@ -1,17 +1,19 @@
 #!/bin/bash
-
+TIPO="Backup de base de datos"
 ARCHIVO=archivo.txt
-FS_USE=`df -h / 2>/dev/null |awk '{print $5}' |grep -v "Uso" `
+FS_USE=`df -h /d 2>/dev/null |awk '{print $5}' |grep -v "Uso" `
 if [ $? -ne 0 ]; then
-    FS_USE=null
+    USO_DISK="No se logro verificar el estado del FileSystem"
+else
+    USO_DISK="Uso del FileSystem en: $FS_USE"
 fi
 
 
 cp $ARCHIVO /tmp 2>/dev/null
 if [ $? -eq 0 ]; then
-    BK_STA='{"Backup":"success","timestamp":"'`date +%H-%M-%S`'","file":"'$ARCHIVO'","volume_usage":"'$FS_USE'"}'
-    node notificationFromShell.js --json $BK_STA
+    ESTATUS="true"
+    node notificationFromShell.js --tipo "$TIPO" --sta "$ESTATUS" --observaciones "$USO_DISK"
 else
-    BK_STA='{"Backup":"fail","timestamp":"'`date +%H-%M-%S`'","file":"'$ARCHIVO'","volume_usage":"'$FS_USE'"}'
-    node notificationFromShell.js --json $BK_STA
+    ESTATUS="false"
+    node notificationFromShell.js --tipo "$TIPO" --sta "$ESTATUS" --observaciones "$USO_DISK"
 fi

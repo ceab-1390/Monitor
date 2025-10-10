@@ -2,7 +2,7 @@ const { google } = require('googleapis');
 const { config } = require('../Config/config');
 const Logger = require('../Logger/Logger');
 
-class GmailSender {
+class GmailClass {
   constructor() {
     this.oauth2Client = new google.auth.OAuth2(
       config.gmailApi.clientId,
@@ -99,4 +99,5 @@ class GmailSender {
   }
 }
 
+let GmailSender = new GmailClass()
 module.exports = { GmailSender };

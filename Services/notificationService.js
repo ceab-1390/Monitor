@@ -3,19 +3,19 @@ const { GmailSender } = require('../Senders/gmailSender');
 const { validateConfig } = require('../Config/config');
 const Logger = require('../Logger/Logger');
 
-class NotificationService {
+class Notifier {
   constructor() {
     
     // Validar configuración
     if (validateConfig('telegram')){
         //initialize Telegram sender
-        this.telegram = new TelegramSender();
+        this.telegram = TelegramSender;
          Logger.log(`🚀 Servicio de Notificaciones ${this.telegram.name}  iniciado`);
     }
 
     if (validateConfig('gmail')){
         //initialize Gmail sender
-        this.gmail = new GmailSender();
+        this.gmail = GmailSender;
         Logger.log(`🚀 Servicio de Notificaciones ${this.gmail.name}  iniciado`);
     }
     
@@ -51,5 +51,6 @@ class NotificationService {
   }
 }
 
+let NotificationService = new Notifier()
 
 module.exports = { NotificationService };

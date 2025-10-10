@@ -432,7 +432,37 @@ Esto podria afectar el rendimiento del sistema y la experiencia del usuario.
             break;
         }
         return notification;
-    }
+    };
+
+    
+    static shellAlertTemplate(alertMessage) {
+        let icon1 = ''
+        let icon2 = ''
+        let info = ''
+        let statusAlert = alertMessage.status
+        if (statusAlert){
+            icon1 = '🆗'
+            info = '✅ Se ejecuto con exito la tarea'
+            icon2 = '🟢'
+        }else{
+            icon1 = '🆘'
+            info = '❌ La tarea fallo por algun motivo'
+            icon2 = '🔴'
+
+        }
+        let notification = '';
+        notification = `📢 NOTIFICACION DE SERVICIO ${icon2}
+
+${icon1} ${alertMessage.tipo}
+
+${info}
+
+Nota: ${alertMessage.observaciones}
+
+⏰ *Notificacion encontrada:* ${alertMessage.timestamp}` 
+
+        return notification;
+    };
 }
 
 module.exports = { Templates };
