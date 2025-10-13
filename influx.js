@@ -40,17 +40,36 @@ class InfluxDB {
   };
   static async getCpuUsage(host) {
     try {
-      const rawData = await influx.query(`SELECT 
-        last("usage_idle") as cpu_idle,
-        last("usage_system") as cpu_system,
-        last("usage_user") as cpu_user 
-        FROM "cpu" 
-        WHERE "host" = '${host}'`);
+      const rawData = await influx.query(`SELECT
+        "usage_idle" as cpu_idle,
+        "usage_system" as cpu_system,
+        "usage_user" as cpu_user,
+        time
+        FROM "cpu"
+        WHERE "host" = '${host}'
+        AND time > now() - 5m ORDER BY time DESC LIMIT 5;`
+      );
+      //Logger.debug(rawData)
+      let data_promedio = {};
+      data_promedio.cpu_idle = 0;
+      data_promedio.cpu_system = 0;
+      data_promedio.cpu_user = 0;
+      data_promedio.index = 0;
+      rawData.forEach((data,index)=>{
+         data_promedio.cpu_idle = Number(data.cpu_idle) + Number(data_promedio.cpu_idle);
+         data_promedio.cpu_system = Number(data.cpu_system) + Number(data_promedio.cpu_system);
+         data_promedio.cpu_user = Number(data.cpu_user) + Number(data_promedio.cpu_user);
+         data_promedio.index = index + 1;
+      })
+      //Logger.debug(data_promedio)
+      data_promedio.cpu_idle = data_promedio.cpu_idle / data_promedio.index;
+      data_promedio.cpu_system = data_promedio.cpu_system / data_promedio.index;
+      data_promedio.cpu_user = data_promedio.cpu_user / data_promedio.index;
       let values = {};
-      values.idle = formatPercent(rawData[0].cpu_idle);
-      values.system = formatPercent(rawData[0].cpu_system);
-      values.user = formatPercent(rawData[0].cpu_user);
-      values.totalUsage = rawData[0].cpu_idle ? formatPercent(100 - rawData[0].cpu_idle) : 'N/A';
+      values.idle = formatPercent(data_promedio.cpu_idle);
+      values.system = formatPercent(data_promedio.cpu_system);
+      values.user = formatPercent(data_promedio.cpu_user);
+      values.totalUsage = data_promedio.cpu_idle ? formatPercent(100 - data_promedio.cpu_idle) : 'N/A';
       return values;
     } catch (error) {
       Logger.error('❌ Error obteniendo datos de InfluxDB:', error.message);
@@ -60,17 +79,34 @@ class InfluxDB {
   static async getMemUsage(host) {
     try {
       const rawData = await influx.query(`SELECT 
-        last("used") as mem_used,
-        last("free") as mem_free,
-        last("total") as mem_total 
+        "used" as mem_used,
+        "free" as mem_free,
+        "total" as mem_total 
         FROM "mem" 
-        WHERE "host" = '${host}'`);
+        WHERE "host" = '${host}'
+        AND time > now() - 5m ORDER BY time DESC LIMIT 5;`);
+
+      let data_promedio = {};
+      data_promedio.mem_used = 0;
+      data_promedio.mem_free = 0;
+      data_promedio.mem_total = 0;
+      data_promedio.index = 0;
+      rawData.forEach((data,index)=>{
+         data_promedio.mem_used = Number(data.mem_used) + Number(data_promedio.mem_used);
+         data_promedio.mem_free = Number(data.mem_free) + Number(data_promedio.mem_free);
+         data_promedio.mem_total = Number(data.mem_total) + Number(data_promedio.mem_total);
+         data_promedio.index = index + 1;
+      })
+      //Logger.debug(data_promedio)
+      data_promedio.mem_used = data_promedio.mem_used / data_promedio.index;
+      data_promedio.mem_free = data_promedio.mem_free / data_promedio.index;
+      data_promedio.mem_total = data_promedio.mem_total / data_promedio.index;
       let values = {};
-      values.used = formatBytes(rawData[0].mem_used);
-      values.free = formatBytes(rawData[0].mem_free);
-      values.total = formatBytes(rawData[0].mem_total);
-      values.usagePercent = rawData[0].mem_used && rawData[0].mem_total ? 
-        formatPercent((rawData[0].mem_used / rawData[0].mem_total) * 100) : 'N/A';
+      values.used = formatBytes(data_promedio.mem_used);
+      values.free = formatBytes(data_promedio.mem_free);
+      values.total = formatBytes(data_promedio.mem_total);
+      values.usagePercent = data_promedio.mem_used && data_promedio.mem_total ? 
+        formatPercent((data_promedio.mem_used / data_promedio.mem_total) * 100) : 'N/A';
       return values;
     } catch (error) {
       Logger.error('❌ Error obteniendo datos de InfluxDB:', error.message);
@@ -80,19 +116,35 @@ class InfluxDB {
   static async getDiskUsage(host, path) {
     try {
       const rawData = await influx.query(`SELECT
-        last("used") as disk_used,
-        last("free") as disk_free,
-        last("total") as disk_total
+        "used" as disk_used,
+        "free" as disk_free,
+        "total" as disk_total
         FROM "disk" 
         WHERE "host" = '${host}'
         AND path = '${path}'
+        AND time > now() - 5m ORDER BY time DESC LIMIT 5;
       `);
+      let data_promedio = {};
+      data_promedio.disk_used = 0;
+      data_promedio.disk_free = 0;
+      data_promedio.disk_total = 0;
+      data_promedio.index = 0;
+      rawData.forEach((data,index)=>{
+         data_promedio.disk_used = Number(data.disk_used) + Number(data_promedio.disk_used);
+         data_promedio.disk_free = Number(data.disk_free) + Number(data_promedio.disk_free);
+         data_promedio.disk_total = Number(data.disk_total) + Number(data_promedio.disk_total);
+         data_promedio.index = index + 1;
+      })
+      //Logger.debug(data_promedio)
+      data_promedio.disk_used = data_promedio.disk_used / data_promedio.index;
+      data_promedio.disk_free = data_promedio.disk_free / data_promedio.index;
+      data_promedio.disk_total = data_promedio.disk_total / data_promedio.index;
       let values = {};
-      values.used = formatBytes(rawData[0].disk_used);
-      values.free = formatBytes(rawData[0].disk_free);
-      values.total = formatBytes(rawData[0].disk_total);
-      values.usagePercent = rawData[0].disk_used && rawData[0].disk_total ? 
-        formatPercent((rawData[0].disk_used / rawData[0].disk_total) * 100) : 'N/A';
+      values.used = formatBytes(data_promedio.disk_used);
+      values.free = formatBytes(data_promedio.disk_free);
+      values.total = formatBytes(data_promedio.disk_total);
+      values.usagePercent = data_promedio.disk_used && data_promedio.disk_total ? 
+        formatPercent((data_promedio.disk_used / data_promedio.disk_total) * 100) : 'N/A';
       return values;
     } catch (error) {
       Logger.error('❌ Error obteniendo datos de InfluxDB:', error.message);
@@ -102,11 +154,12 @@ class InfluxDB {
   static async getElementorErrors(host) {
     try {
       const rawData = await influx.query(`SELECT
-        LAST(count) AS count,
+        count AS count,
         log_file AS log,
         host
         FROM elementor_errors
-        WHERE host = '${host}'`
+        WHERE host = '${host}'
+        AND time > now() - 5m ORDER BY time DESC LIMIT 5;`
       );
       let values = {};
       values.count = rawData[0]?.count || 0;

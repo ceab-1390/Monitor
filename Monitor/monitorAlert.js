@@ -37,6 +37,7 @@ module.exports.alertas = async () =>{
             hosts.forEach(async (host,index) => {
 
                 let alertCpu = await InfluxDB.getCpuUsage(host);
+                Logger.debug(`Valor para el cpu ${host} = ${alertCpu.totalUsage}`);
                 let umbralCpu = process.env.CPU_ALERT_THRESHOLD;
                 if (alertCpu.totalUsage !== 'N/A' && parseFloat(alertCpu.totalUsage) > parseFloat(umbralCpu)){
                         const alertParams = {
@@ -69,6 +70,7 @@ module.exports.alertas = async () =>{
                 }
 
                 let alertMem = await InfluxDB.getMemUsage(host);
+                Logger.debug(`Valor para la memoria ${host} = ${alertMem.usagePercent}`);
                 umbralMem = process.env.MEMORY_ALERT_THRESHOLD;
                 if (alertMem.usagePercent !== 'N/A' && parseFloat(alertMem.usagePercent) > parseFloat(umbralMem)){
                         const alertParams = {
@@ -98,8 +100,8 @@ module.exports.alertas = async () =>{
                 let pathToCheck = process.env.DISK_PATHS;
                 let pathsArray = pathToCheck.split(',').map(path => path.trim());
                 pathsArray.forEach(async (path,index) => {
-                    Logger.debug(`Revisando path: ${path} del host ${host}`);
                     let alertDisk = await InfluxDB.getDiskUsage(host,path);
+                    Logger.debug(`Valor para la el disco ${path} de ${host} = ${alertDisk.usagePercent}`);
                     umbralDisk = process.env.DISK_ALERT_THRESHOLD;
                     if (alertDisk.usagePercent !== 'N/A' && parseFloat(alertDisk.usagePercent) > parseFloat(umbralDisk)){
                             const alertParams = {
