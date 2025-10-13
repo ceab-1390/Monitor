@@ -63,8 +63,7 @@ module.exports.alertas = async () =>{
                         const saveAlertSent = await InfluxDB.saveSentNotification(host,'cpu','topicCPU');
                         Logger.debug(saveAlertSent)
                     }else{
-                        Logger.info(`Se encontro una alerta no resuelta para el host ${host} en el topico CPU`)
-                        Logger.info(`Alerta de CPU ya enviada para el host ${host}, esperando ${IntervalToResend - diffMinutes} Minutos para reenvío.`);
+                        Logger.info(`Alerta de CPU encontrada, ya enviada para el host ${host}, esperando ${IntervalToResend - diffMinutes} Minutos para reenvío.`);
                     }
          
                 }
@@ -93,7 +92,7 @@ module.exports.alertas = async () =>{
                         await InfluxDB.saveSentNotification(host,'memoria','topicoMEM');
                         Logger.info(`Alerta de Memoria enviada para el host ${host}`);
                     }else{
-                        Logger.info(`Alerta de Memoria ya enviada para el host ${host}, esperando ${IntervalToResend - diffMinutes } para reenvío.`);
+                        Logger.info(`Alerta de Memoria encontrada, ya enviada para el host ${host}, esperando ${IntervalToResend - diffMinutes } para reenvío.`);
                     }
                 }
 
@@ -124,7 +123,7 @@ module.exports.alertas = async () =>{
                             await InfluxDB.saveSentNotification(host,`disco_${path.replace(/\//g, '_')}`,'topicoDISK');
                             Logger.info(`Alerta de Disco enviada para el host ${host} en el path ${path}`);
                         }else{
-                            Logger.info(`Alerta de Disco ya enviada para el host ${host} en el path ${path}, esperando ${IntervalToResend - diffMinutes } para reenvío.`);
+                            Logger.info(`Alerta de Disco encontrada, ya enviada para el host ${host} en el path ${path}, esperando ${IntervalToResend - diffMinutes } para reenvío.`);
                         }
                     }
                 });
@@ -152,7 +151,7 @@ module.exports.alertas = async () =>{
                         await InfluxDB.saveSentNotification(host,'elementor','topicoELEMENTOR');
                         Logger.info(`Alerta de Elementor enviada para el host ${host}`);
                     }else{
-                        Logger.info(`Alerta de Elementor ya enviada para el host ${host}, esperando ${IntervalToResend - diffMinutes } para reenvío.`);
+                        Logger.info(`Alerta de Elementor encontrada, ya enviada para el host ${host}, esperando ${IntervalToResend - diffMinutes } para reenvío.`);
                     }
                 };
             });

@@ -170,12 +170,12 @@ class InfluxDB {
       return [];
     };
   };
-  static async saveSentNotification(host, metric, channel) {
+  static async saveSentNotification(host, metric, topic) {
     try {
       let saveItem = await influx.writePoints([
         {
           measurement: 'notifications_sent',
-          tags: { host, metric, channel },
+          tags: { host, metric, topic },
           fields: { count: 1 },
           timestamp: new Date()
         }
@@ -185,18 +185,18 @@ class InfluxDB {
       Logger.error('❌ Error guardando notificación en InfluxDB:', error.message);
     }
   };
-  static async getSentNotifications(host, metric, channel) {
+  static async getSentNotifications(host, metric, topic) {
     try {
       const result = await influx.query(`SELECT
       LAST(count),
       "time",
       "metric",
-      "channel",
+      "topic",
       "host"
       FROM "notifications_sent"
       WHERE host = '${host}'
       AND metric = '${metric}'
-      AND channel = '${channel}'
+      AND topic = '${topic}'
       `);
       return result[0];
     } catch (error) {

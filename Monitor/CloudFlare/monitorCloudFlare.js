@@ -73,7 +73,7 @@ async function addIP(ip, comment) {
 
 
 // Ejemplo de uso:
-//addIP('203.0.113.25', 'Servidor de pruebas');
+addIP('190.89.29.244', 'Bruno-latest');
 
 
 
@@ -108,7 +108,7 @@ async function listItems() {
   }
 }
 
-listItems();
+//listItems();
 
 
 
