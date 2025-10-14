@@ -47,7 +47,7 @@ class InfluxDB {
         time
         FROM "cpu"
         WHERE "host" = '${host}'
-        AND time > now() - 5m ORDER BY time DESC LIMIT 5;`
+        AND time > now() - 1m ORDER BY time DESC LIMIT 50;`
       );
       //Logger.debug(rawData)
       let data_promedio = {};
@@ -84,7 +84,7 @@ class InfluxDB {
         "total" as mem_total 
         FROM "mem" 
         WHERE "host" = '${host}'
-        AND time > now() - 5m ORDER BY time DESC LIMIT 5;`);
+        AND time > now() - 1m ORDER BY time DESC LIMIT 50;`);
 
       let data_promedio = {};
       data_promedio.mem_used = 0;
@@ -116,36 +116,31 @@ class InfluxDB {
   static async getDiskUsage(host, path) {
     try {
       const rawData = await influx.query(`SELECT
-        "used" as disk_used,
+        LAST("used") as disk_used,
         "free" as disk_free,
         "total" as disk_total
         FROM "disk" 
         WHERE "host" = '${host}'
         AND path = '${path}'
-        AND time > now() - 5m ORDER BY time DESC LIMIT 5;
+        AND time > now() - 1m ORDER BY time DESC LIMIT 50;
       `);
-      let data_promedio = {};
-      data_promedio.disk_used = 0;
-      data_promedio.disk_free = 0;
-      data_promedio.disk_total = 0;
-      data_promedio.index = 0;
-      rawData.forEach((data,index)=>{
-         data_promedio.disk_used = Number(data.disk_used) + Number(data_promedio.disk_used);
-         data_promedio.disk_free = Number(data.disk_free) + Number(data_promedio.disk_free);
-         data_promedio.disk_total = Number(data.disk_total) + Number(data_promedio.disk_total);
-         data_promedio.index = index + 1;
-      })
       //Logger.debug(data_promedio)
-      data_promedio.disk_used = data_promedio.disk_used / data_promedio.index;
-      data_promedio.disk_free = data_promedio.disk_free / data_promedio.index;
-      data_promedio.disk_total = data_promedio.disk_total / data_promedio.index;
       let values = {};
-      values.used = formatBytes(data_promedio.disk_used);
-      values.free = formatBytes(data_promedio.disk_free);
-      values.total = formatBytes(data_promedio.disk_total);
-      values.usagePercent = data_promedio.disk_used && data_promedio.disk_total ? 
-        formatPercent((data_promedio.disk_used / data_promedio.disk_total) * 100) : 'N/A';
-      return values;
+      if (rawData.length === 0){
+        return values = {
+          used : 'N/A',
+          free : 'N/A',
+          total: 'N/A',
+          usagePercent: 'N/A'
+        };
+      }else{
+        values.used = formatBytes(rawData[0].disk_used);
+        values.free = formatBytes(rawData[0].disk_free);
+        values.total = formatBytes(rawData[0].disk_total);
+        values.usagePercent = rawData[0].disk_used && rawData[0].disk_total ? 
+        formatPercent((rawData[0].disk_used / rawData[0].disk_total) * 100) : 'N/A';
+        return values;
+      }
     } catch (error) {
       Logger.error('❌ Error obteniendo datos de InfluxDB:', error.message);
       return [];
@@ -154,12 +149,12 @@ class InfluxDB {
   static async getElementorErrors(host) {
     try {
       const rawData = await influx.query(`SELECT
-        count AS count,
+        LAST(count) AS count,
         log_file AS log,
         host
         FROM elementor_errors
         WHERE host = '${host}'
-        AND time > now() - 5m ORDER BY time DESC LIMIT 5;`
+        AND time > now() - 5m ORDER BY time DESC;`
       );
       let values = {};
       values.count = rawData[0]?.count || 0;
@@ -229,115 +224,6 @@ function formatPercent(value) {
     return `${value.toFixed(1)}%`;
 }
 
-// async function obtenerDatosPorHost() {
-//   try {
-//     // Obtener la lista de hosts únicos
-//     const hosts = await influx.query(`
-//       SHOW TAG VALUES FROM "cpu" WITH KEY = "host"
-//     `);
-
-//     const resultados = [];
-
-//     for (const hostObj of hosts) {
-//       const host = hostObj.value;
-
-//       // Obtener datos de memoria (usar nombres de alias seguros)
-//       const memoriaRaw = await influx.query(`
-//         SELECT last("used") as mem_used, last("free") as mem_free, last("total") as mem_total 
-//         FROM "mem" 
-//         WHERE "host" = '${host}'
-//       `);
-
-//       // Obtener datos de CPU (escapar "user" o usar alias diferente)
-//       const cpuRaw = await influx.query(`
-//         SELECT last("usage_idle") as cpu_idle, last("usage_system") as cpu_system, last("usage_user") as cpu_user 
-//         FROM "cpu" 
-//         WHERE "host" = '${host}'
-//       `);
-
-//       // Obtener datos de disco
-//       const discoRaw = await influx.query(`
-//         SELECT last("used") as disk_used, last("free") as disk_free, last("total") as disk_total FROM "disk" 
-//         WHERE "host" = '${host}'
-//       `);
-      
-//       //obtener datos de elementor css
-//       const elementorRaw = await influx.query(
-//         `SELECT LAST(count) AS count, log_file AS log, host FROM elementor_errors WHERE host = '${host}'`
-//       );
-
-//       const memoriaData = memoriaRaw[0] || {};
-//       const cpuData = cpuRaw[0] || {};
-//       const discoData = discoRaw[0] || {};
-//       const elementorData = elementorRaw[0] || {};
-//       Logger.debug(`Datos para ${host}`)
-//       Logger.debug(elementorData)
-//       Logger.debug(`Finalizado datos\n\n`)
-
-//       // Calcular porcentajes usando los nuevos nombres de alias
-//       const memUsedPercent = memoriaData.mem_used && memoriaData.mem_total ? 
-//         (memoriaData.mem_used / memoriaData.mem_total) * 100 : null;
-      
-//       const diskUsedPercent = discoData.disk_used && discoData.disk_total ? 
-//         ((discoData.disk_total - discoData.disk_free) * 100) / discoData.disk_total : null;
-
-//       // Estructurar datos formateados
-//       const memoria = {
-//         used: {
-//           raw: memoriaData.mem_used,
-//           formatted: formatBytes(memoriaData.mem_used),
-//           percent: memUsedPercent ? formatPercent(memUsedPercent) : 'N/A'
-//         },
-//         free: {
-//           raw: memoriaData.mem_free,
-//           formatted: formatBytes(memoriaData.mem_free),
-//           percent: memUsedPercent ? formatPercent(100 - memUsedPercent) : 'N/A'
-//         },
-//         total: {
-//           raw: memoriaData.mem_total,
-//           formatted: formatBytes(memoriaData.mem_total)
-//         },
-//         usagePercent: memUsedPercent ? formatPercent(memUsedPercent) : 'N/A'
-//       };
-
-//       const cpu = {
-//         idle: {
-//           raw: cpuData.cpu_idle,
-//           formatted: formatPercent(cpuData.cpu_idle)
-//         },
-//         system: {
-//           raw: cpuData.cpu_system,
-//           formatted: formatPercent(cpuData.cpu_system)
-//         },
-//         user: {
-//           raw: cpuData.cpu_user,
-//           formatted: formatPercent(cpuData.cpu_user)
-//         },
-//         totalUsage: cpuData.cpu_idle ? formatPercent(100 - cpuData.cpu_idle) : 'N/A'
-//       };
-
-//       const disco = {
-//         used: {
-//           raw: discoData.disk_used,
-//           formatted: formatBytes(discoData.disk_used),
-//           percent: diskUsedPercent ? formatPercent(diskUsedPercent) : 'N/A'
-//         },
-//         free: {
-//           raw: discoData.disk_free,
-//           formatted: formatBytes(discoData.disk_free),
-//           percent: diskUsedPercent ? formatPercent(100 - diskUsedPercent) : 'N/A'
-//         },
-//         total: {
-//           raw: discoData.disk_total,
-//           formatted: formatBytes(discoData.disk_total)
-//         },
-//         usagePercent: diskUsedPercent ? formatPercent(diskUsedPercent) : 'N/A'
-//       };
-
-//       const elementor = {
-//         count: elementorData.count || 0,
-//         log: elementorData.log || 'N/A'
-//       }
 
 //       resultados.push({ 
 //         host, 
@@ -346,13 +232,6 @@ function formatPercent(value) {
 //         disco,
 //         elementor
 //       });
-//     }
 
-//     return resultados;
-//   } catch (error) {
-//     Logger.error('Error al obtener datos de InfluxDB:', error);
-//     return [];
-//   }
-// }
 
 module.exports = {InfluxDB };
