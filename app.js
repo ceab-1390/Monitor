@@ -30,11 +30,11 @@ async function iniciarMonitor() {
     const intervaloMinutos = process.env.MONITOR_INTERVAL || 20;
     const intervaloMs = intervaloMinutos * 60 * 1000; // X minutos en milisegundos
      // Programar ejecuciones periódicas cada X minutos
-    //intervalId = setInterval(Monitor.alertas, intervaloMs);
+    intervalId = setInterval(Monitor.alertas, intervaloMs);
     Logger.info(`Iniciando monitor cada ${intervaloMinutos} minutos`);
     // Ejecutar inmediatamente la primera vez
-    //Monitor.alertas()
-    cloudflareEvent = setInterval(Monitor.cloudFlare,intervaloMs);
+    Monitor.alertas()
+    cloudflareEvent = setInterval(Monitor.cloudFlare,(intervaloMs * 5));
     Monitor.cloudFlare()
 
 }
