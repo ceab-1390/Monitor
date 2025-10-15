@@ -105,7 +105,7 @@ module.exports.alertas = async () =>{
                 let pathsArray = pathToCheck.split(',').map(path => path.trim());
                 pathsArray.forEach(async (path,index) => {
                     let alertDisk = await InfluxDB.getDiskUsage(host,path);
-                    Logger.debug(`Valor para la el disco ${path} de ${host} = ${alertDisk.usagePercent}`);
+                    Logger.debug(`Valor para el disco ${path} de ${host} = ${alertDisk.usagePercent}`);
                     umbralDisk = process.env.DISK_ALERT_THRESHOLD;
                     if (alertDisk.usagePercent !== 'N/A' && parseFloat(alertDisk.usagePercent) > parseFloat(umbralDisk)){
                             const alertParams = {
@@ -134,6 +134,7 @@ module.exports.alertas = async () =>{
                 });
 
                 let alertElementor = await InfluxDB.getElementorErrors(host);
+                Logger.debug(`Valor para Elementor errors de ${host} = ${alertElementor.count}`);
                 umbralElementor = process.env.ELEMENTOR_ALERT_THRESHOLD;
                 if (alertElementor.count !== 'N/A' && parseInt(alertElementor.count) > parseInt(umbralElementor)){
                         const alertParams = {
