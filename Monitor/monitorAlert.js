@@ -225,7 +225,7 @@ module.exports.cloudFlare = async () => {
         // Limpieza opcional
         lastEvent = [];
     } else {
-        Logger.info("✅ Sin eventos significativos detectados.");
+        Logger.info(`✅ Sin eventos significativos detectados. El conteo actual en la lista es: ${lastEvent.length}`);
     };
 
 
