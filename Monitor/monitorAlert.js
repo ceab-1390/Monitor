@@ -188,8 +188,9 @@ module.exports.cloudFlare = async () => {
             });
             let comment = `[${date}][NODEJS_MONITOR][Actividad Sospechosa!!]`
             await CloudflareApi.addIPToList(LIST_ID,event.ip,comment);
-            const exists = lastEvent.find((e) => e.clientIp === event.ip);
-
+            
+            const exists = lastEvent.length != 0 ? lastEvent.find((e) => e.clientIp === event.ip) : false
+            Logger.debug(exists)
             if (!exists) {
                 lastEvent.push({
                 clientIp: event.ip,
@@ -197,7 +198,7 @@ module.exports.cloudFlare = async () => {
                 action: event.actions
                 });
                 Logger.info(
-                `⚠️ Posible ataque desde ${event.ip} con ${event.count} peticiones (${event.actions})`
+                `⚠️ Posible ataque desde ${event.ip} con ${event.count} peticiones (${event.actions}) countList: ${lastEvent.length}`
                 );
             } else if (event.count > exists.count) {
                 // si ya existe pero con menor conteo, actualiza
