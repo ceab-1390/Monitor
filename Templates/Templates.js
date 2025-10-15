@@ -433,6 +433,15 @@ Esto podria afectar el rendimiento del sistema y la experiencia del usuario.
         }
         return notification;
     };
+    static eventosCloudflareTelegram(messageBody){
+       const notification = `⚠️ Se han detectado posibles ataques ⚠️
+🔵 Lista Actual de IPs Encontradas 🔵
+
+${messageBody}
+
+‼️Esto es un mensaje de pruebas‼️`
+        return notification;
+    };
 
     
     static shellAlertTemplate(alertMessage) {

@@ -3,6 +3,10 @@ const {InfluxDB} = require('../influx');
 const { NotificationService } = require('../Services/notificationService');
 const notifier = NotificationService;
 const {Templates} = require('../Templates/Templates');
+const {CloudflareApi} = require('../Services/apiCloudFlare');
+const chatId = process.env.CHAT_ID;
+const eventsInList = process.env.EVENTS_LIST
+const LIST_ID = process.env.LIST_ID
 
 
 module.exports.alertas = async () =>{
@@ -30,7 +34,6 @@ module.exports.alertas = async () =>{
     }else{
         const hosts = await InfluxDB.getHosts();
         Logger.debug(`Hosts encontrados: ${hosts}`)
-        const chatId = process.env.CHAT_ID;
         let mensajeTg = '';
         let messageEmail = '';
         if (hosts.length !== 0) {
@@ -158,4 +161,72 @@ module.exports.alertas = async () =>{
         }
     }
  
-}
+};
+
+module.exports.cloudFlare = async () => {
+    let events = await CloudflareApi.getFirewallEventsByIP();
+
+
+    if (!events) {
+        Logger.info("❌ No se obtuvo respuesta de Cloudflare");
+        return;
+    };
+
+    let lastEvent = [];
+    events.forEach(async (event) => {
+        if (event.count >= 10) {
+            //Agregar a la lista negra (Sin acciones actualemnete)
+            let date = new Date().toLocaleString('es-VE', { 
+                timeZone: 'America/Caracas',
+                hour12: false,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            let comment = `[${date}][NODEJS_MONITOR][Actividad Sospechosa!!]`
+            await CloudflareApi.addIPToList(LIST_ID,event.ip,comment);
+            const exists = lastEvent.find((e) => e.clientIp === event.ip);
+
+            if (!exists) {
+                lastEvent.push({
+                clientIp: event.ip,
+                count: event.count,
+                action: event.actions
+                });
+                Logger.info(
+                `⚠️ Posible ataque desde ${event.ip} con ${event.count} peticiones (${event.actions})`
+                );
+            } else if (event.count > exists.count) {
+                // si ya existe pero con menor conteo, actualiza
+                exists.count = event.count;
+                exists.action = event.actions;
+            }
+        }
+    });
+
+    if (lastEvent.length >= Number(eventsInList)) {
+        Logger.info(`📊 Cantidad de registros para la tabla: ${lastEvent.length}`);
+        console.table(lastEvent);
+
+        // construimos el cuerpo del mensaje
+        const messageBody = lastEvent
+        .map(
+            (item, i) =>
+            `🔸IP: ${item.clientIp}\n 🧮 Count: ${item.count}\n 🚨 Acción: ${item.action}`
+        )
+        .join("\n\n");
+
+        const mensajeTg = Templates.eventosCloudflareTelegram(messageBody);
+        await notifier.sendTelegram(chatId, mensajeTg);
+
+        // Limpieza opcional
+        lastEvent = [];
+    } else {
+        Logger.info("✅ Sin eventos significativos detectados.");
+    };
+
+
+};

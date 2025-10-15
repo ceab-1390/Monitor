@@ -2,8 +2,7 @@ const { NotificationService }   = require('./Services/notificationService');
 const notifier = NotificationService;
 const {Templates} = require('./Templates/Templates');
 const Logger = require('./Logger/Logger');
-const Monitor = require('./Monitor/monitorAlert')
-
+const Monitor = require('./Monitor/monitorAlert');
 
 function enviarEmailTest(){
     const mensajeTest = Templates.mailAlertTemplate(
@@ -31,11 +30,16 @@ async function iniciarMonitor() {
     const intervaloMinutos = process.env.MONITOR_INTERVAL || 20;
     const intervaloMs = intervaloMinutos * 60 * 1000; // X minutos en milisegundos
      // Programar ejecuciones periódicas cada X minutos
-    intervalId = setInterval(Monitor.alertas, intervaloMs);
+    //intervalId = setInterval(Monitor.alertas, intervaloMs);
     Logger.info(`Iniciando monitor cada ${intervaloMinutos} minutos`);
     // Ejecutar inmediatamente la primera vez
-    Monitor.alertas()
+    //Monitor.alertas()
+    cloudflareEvent = setInterval(Monitor.cloudFlare,intervaloMs);
+    Monitor.cloudFlare()
+
 }
+
+
 
 iniciarMonitor();
 //enviarEmailTest()

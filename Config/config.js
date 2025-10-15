@@ -17,6 +17,12 @@ const config = {
     secret : process.env.GOOGLE_CLIENT_SECRET,
     r_uri : process.env.GOOGLE_REDIRECT_URI,
     refreshToken : process.env.GOOGLE_REFRESH_TOKEN
+  },
+  cloudflareApi: {
+    cf_token : process.env.CF_TOKEN,
+    account_id : process.env.ACCOUNT_ID,
+    zone_id : process.env.ZONE_ID,
+    list_id : process.env.LIST_ID
   }
 };
 
@@ -33,6 +39,14 @@ function validateConfig(Service) {
       }
       break;
     case 'gmail':
+      if (!config.gmail.email) {
+        Logger.warn('⚠️  GMAIL_EMAIL no configurado');
+        return false;
+      }else{
+        return true;
+      }
+      break;
+      case 'gmailApi':
       if (!config.gmail.email) {
         Logger.warn('⚠️  GMAIL_EMAIL no configurado');
         return false;

@@ -1,9 +1,0 @@
-Xjy8HnWujGd07B7fkcSlWoS38UVikBC79n3RcNGO
-
-curl "https://api.cloudflare.com/client/v4/user/tokens/verify" \
--H "Authorization: Bearer Xjy8HnWujGd07B7fkcSlWoS38UVikBC79n3RcNGO"
-
-zona ID = e79c00fc155dcf4e6cda3508f3863cc9
-
-
-5JC1z97oonYR3FauY93J_DM-l2d5hBnjjgQ55CCq last
