@@ -190,8 +190,9 @@ module.exports.cloudFlare = async () => {
             let comment = `[${date}][NODEJS_MONITOR][Actividad Sospechosa!!]`
             await CloudflareApi.addIPToList(LIST_ID,event.ip,comment);
             
-            const exists = lastEvent.length != 0 ? lastEvent.find((e) => e.clientIp === event.ip) : false
-            Logger.debug(exists)
+            const exists = lastEvent.length != 0 ? lastEvent.find((e) => e.clientIp === event.ip) : false 
+            exists = exists === undefined ? exists = false : exists;
+            Logger.debug(`Valor de exists para comparacion de busqueda = ${exists}`)
             if (!exists) {
                 lastEvent.push({
                 clientIp: event.ip,
