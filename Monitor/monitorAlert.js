@@ -7,6 +7,8 @@ const {CloudflareApi} = require('../Services/apiCloudFlare');
 const chatId = process.env.CHAT_ID;
 const eventsInList = process.env.EVENTS_LIST
 const LIST_ID = process.env.LIST_ID
+let lastEvent = [];
+
 
 
 module.exports.alertas = async () =>{
@@ -172,7 +174,6 @@ module.exports.cloudFlare = async () => {
         return;
     };
 
-    let lastEvent = [];
     events.forEach(async (event) => {
         if (event.count >= 10) {
             //Agregar a la lista negra (Sin acciones actualemnete)
@@ -226,8 +227,9 @@ module.exports.cloudFlare = async () => {
         // Limpieza opcional
         lastEvent = [];
     } else {
-        Logger.info(`✅ Sin eventos significativos detectados. El conteo actual en la lista es: ${lastEvent.length}`);
+        Logger.info(`La lista no tiene suficientes items para ser enviada`)
     };
 
+    Logger.info(`El conteo actual en la lista es: ${lastEvent.length}`);
 
 };
