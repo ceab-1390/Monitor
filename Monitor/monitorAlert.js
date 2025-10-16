@@ -215,7 +215,6 @@ module.exports.cloudFlare = async () => {
                 ip : item.clientIp,
                 comment : comment
             }));
-            Logger.debug(ipToBlackList)
             await CloudflareApi.addIPToList(LIST_ID,ipToBlackList);
         }else{
             Logger.debug('No se agregaron ips a la lista negra')
