@@ -122,13 +122,11 @@ class CloudflareApi {
   }
   };
 
-  static async addIPToList(list, ip, comment) {
+  static async addIPToList(list, ipToBlackList) {
   try {
     const res = await axios.post(
       `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/rules/lists/${list}/items`,
-      [
-        { ip, comment } // Array: puedes agregar varios items al mismo tiempo
-      ],
+      ipToBlackList, // Array: puedes agregar varios items al mismo tiempo
       {
         headers: {
           Authorization: `Bearer ${CF_TOKEN}`,
@@ -138,7 +136,8 @@ class CloudflareApi {
     );
 
     if (res.data.success) {
-      Logger.log(`✅ IP ${ip} agregada correctamente con comentario: "${comment}"`);
+      Logger.log(`Las ip se agregaron correctamente con comentario:`);
+      console.list(ipToBlackList);
     } else {
       Logger.log('❌ Error al agregar IP:', res.data.errors);
     }

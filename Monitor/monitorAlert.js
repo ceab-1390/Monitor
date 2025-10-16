@@ -169,14 +169,36 @@ module.exports.alertas = async () =>{
 module.exports.cloudFlare = async () => {
     let events = await CloudflareApi.getFirewallEventsByIP();
 
-
     if (!events) {
         Logger.info("❌ No se obtuvo respuesta de Cloudflare");
         return;
     };
 
-    events.forEach(async (event) => {
-        if (event.count >= 10) {
+    new Promise((resolve)=>{
+        events.forEach((event) => {
+            if (event.count >= 10) {
+                var exists = lastEvent.length != 0 ? lastEvent.find((e) => e.clientIp === event.ip) : false 
+                exists = exists === undefined ? exists = false : exists;
+                Logger.debug(`Valor de exists para comparacion de busqueda = ${exists}`)
+                if (!exists) {
+                    lastEvent.push({
+                    clientIp: event.ip,
+                    count: event.count,
+                    action: event.actions
+                    });
+                    Logger.info(
+                    `⚠️ Posible ataque desde ${event.ip} con ${event.count} peticiones (${event.actions}) countList: ${lastEvent.length}`
+                    );
+                } else if (event.count > exists.count) {
+                    // si ya existe pero con menor conteo, actualiza
+                    exists.count = event.count;
+                    exists.action = event.actions;
+                }
+            }
+        });
+        resolve()
+    }).then(async()=>{
+        if (lastEvent.length != 0 ){
             //Agregar a la lista negra (Sin acciones actualemnete)
             let date = new Date().toLocaleString('es-VE', { 
                 timeZone: 'America/Caracas',
@@ -188,28 +210,21 @@ module.exports.cloudFlare = async () => {
                 minute: '2-digit',
                 second: '2-digit'
             });
-            let comment = `[${date}][NODEJS_MONITOR][Actividad Sospechosa!!]`
-            await CloudflareApi.addIPToList(LIST_ID,event.ip,comment);
-            
-            var exists = lastEvent.length != 0 ? lastEvent.find((e) => e.clientIp === event.ip) : false 
-            exists = exists === undefined ? exists = false : exists;
-            Logger.debug(`Valor de exists para comparacion de busqueda = ${exists}`)
-            if (!exists) {
-                lastEvent.push({
-                clientIp: event.ip,
-                count: event.count,
-                action: event.actions
-                });
-                Logger.info(
-                `⚠️ Posible ataque desde ${event.ip} con ${event.count} peticiones (${event.actions}) countList: ${lastEvent.length}`
-                );
-            } else if (event.count > exists.count) {
-                // si ya existe pero con menor conteo, actualiza
-                exists.count = event.count;
-                exists.action = event.actions;
-            }
+            let comment = `[ ${date} ][NODEJS_MONITOR - Actividad Sospechosa!!]`
+            let ipToBlackList = lastEvent.map( item =>({
+                ip : item.clientIp,
+                comment : comment
+            }));
+            Logger.debug(ipToBlackList)
+            await CloudflareApi.addIPToList(LIST_ID,ipToBlackList);
+        }else{
+            Logger.debug('No se agregaron ips a la lista negra')
         }
-    });
+
+    })
+
+
+
 
     if (lastEvent.length >= Number(eventsInList)) {
         Logger.info(`📊 Cantidad de registros para la tabla: ${lastEvent.length}`);
