@@ -137,7 +137,7 @@ class CloudflareApi {
 
     if (res.data.success) {
       Logger.log(`Las ip se agregaron correctamente con comentario:`);
-      console.list(ipToBlackList);
+      console.table(ipToBlackList);
     } else {
       Logger.log('❌ Error al agregar IP:', res.data.errors);
     }
