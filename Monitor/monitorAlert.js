@@ -42,7 +42,9 @@ module.exports.alertas = async () =>{
             hosts.forEach(async (host,index) => {
 
                 let alertCpu = await InfluxDB.getCpuUsage(host);
-                Logger.debug(`Valor para el cpu ${host} = ${alertCpu.totalUsage}`);
+                let valuesToHost = [];
+                valuesToHost[host] = {}
+                valuesToHost[host].cpu = alertCpu.totalUsage
                 let umbralCpu = process.env.CPU_ALERT_THRESHOLD;
                 if (alertCpu.totalUsage !== 'N/A' && parseFloat(alertCpu.totalUsage) > parseFloat(umbralCpu)){
                         const alertParams = {
@@ -74,7 +76,7 @@ module.exports.alertas = async () =>{
                 }
 
                 let alertMem = await InfluxDB.getMemUsage(host);
-                Logger.debug(`Valor para la memoria ${host} = ${alertMem.usagePercent}`);
+                valuesToHost[host].memory = alertMem.usagePercent;
                 umbralMem = process.env.MEMORY_ALERT_THRESHOLD;
                 if (alertMem.usagePercent !== 'N/A' && parseFloat(alertMem.usagePercent) > parseFloat(umbralMem)){
                         const alertParams = {
@@ -105,7 +107,8 @@ module.exports.alertas = async () =>{
                 let pathsArray = pathToCheck.split(',').map(path => path.trim());
                 pathsArray.forEach(async (path,index) => {
                     let alertDisk = await InfluxDB.getDiskUsage(host,path);
-                    Logger.debug(`Valor para el disco ${path} de ${host} = ${alertDisk.usagePercent}`);
+                    valuePath = 'disk_' + index 
+                    valuesToHost[host][valuePath] = ` ${path} => ${alertDisk.usagePercent}`;
                     umbralDisk = process.env.DISK_ALERT_THRESHOLD;
                     if (alertDisk.usagePercent !== 'N/A' && parseFloat(alertDisk.usagePercent) > parseFloat(umbralDisk)){
                             const alertParams = {
@@ -134,7 +137,7 @@ module.exports.alertas = async () =>{
                 });
 
                 let alertElementor = await InfluxDB.getElementorErrors(host);
-                Logger.debug(`Valor para Elementor errors de ${host} = ${alertElementor.count}`);
+                valuesToHost[host].elementor_err = alertElementor.count
                 umbralElementor = process.env.ELEMENTOR_ALERT_THRESHOLD;
                 if (alertElementor.count !== 'N/A' && parseInt(alertElementor.count) > parseInt(umbralElementor)){
                         const alertParams = {
@@ -160,10 +163,11 @@ module.exports.alertas = async () =>{
                         Logger.info(`Alerta de Elementor encontrada, ya enviada para el host ${host}, esperando ${IntervalToResend - diffMinutes } para reenvío.`);
                     }
                 };
+            
+                console.table(valuesToHost)
             });
         }
     }
- 
 };
 
 module.exports.cloudFlare = async () => {
