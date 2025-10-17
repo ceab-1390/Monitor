@@ -199,6 +199,19 @@ class InfluxDB {
       return 0;
     }
   };
+  static async getSuspiciousIPs(time){
+    try {
+      const result = await influx.query(`SELECT
+        SUM(count) as total_count 
+        FROM ip_sospechosa 
+        WHERE time > now() - ${time} GROUP BY ip;
+        `);
+      return result
+    } catch (error) {
+        Logger.error('❌ Error obteniendo notificaciones de InfluxDB:', error.message);
+        return false;
+    }
+  }
 }
 
 

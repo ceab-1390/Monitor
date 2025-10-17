@@ -8,6 +8,7 @@ const chatId = process.env.CHAT_ID;
 const eventsInList = process.env.EVENTS_LIST
 const LIST_ID = process.env.LIST_ID
 let lastEvent = [];
+let lastEventNginx = [];
 
 
 
@@ -171,28 +172,25 @@ module.exports.alertas = async () =>{
 };
 
 module.exports.cloudFlare = async () => {
-    let events = await CloudflareApi.getFirewallEventsByIP();
-
-    if (!events) {
+    let eventsCloudFlare = await CloudflareApi.getFirewallEventsByIP();
+    if (!eventsCloudFlare) {
         Logger.info("❌ No se obtuvo respuesta de Cloudflare");
         return;
     };
 
     new Promise((resolve)=>{
-        events.forEach((event) => {
+        eventsCloudFlare.forEach((event) => {
             if (event.count >= 10) {
                 var exists = lastEvent.length != 0 ? lastEvent.find((e) => e.clientIp === event.ip) : false 
                 exists = exists === undefined ? exists = false : exists;
                 Logger.debug(`Valor de exists para comparacion de busqueda = ${exists}`)
                 if (!exists) {
                     lastEvent.push({
-                    clientIp: event.ip,
-                    count: event.count,
-                    action: event.actions
+                        clientIp: event.ip,
+                        count: event.count,
+                        action: event.actions
                     });
-                    Logger.info(
-                    `⚠️ Posible ataque desde ${event.ip} con ${event.count} peticiones (${event.actions}) countList: ${lastEvent.length}`
-                    );
+                    Logger.info(`⚠️ CloudflareApi Posible ataque desde ${event.ip} con ${event.count} peticiones (${event.actions}) countList: ${lastEvent.length}`);
                 } else if (event.count > exists.count) {
                     // si ya existe pero con menor conteo, actualiza
                     exists.count = event.count;
@@ -258,6 +256,77 @@ module.exports.cloudFlare = async () => {
     Logger.info(`El conteo actual en la lista es: ${lastEvent.length}`);
 
 };
+
+module.exports.nginx = async () => {
+    let eventNginx = await InfluxDB.getSuspiciousIPs('1h');
+
+    if (!eventNginx || eventNginx.length == 0 ){
+        Logger.debug('Sin datos de actividad sospechosa en nginx')
+        return
+    }
+    let nowCaracasString = new Date().toLocaleString('en-US', { 
+                timeZone: 'America/Caracas',
+                hour12: false,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+    });
+    let date = new Date(nowCaracasString);
+    let comment = date
+    new Promise((resolve)=>{
+        eventNginx.forEach(event =>{
+            if (event.total_count >= 10 ){
+                var exists = lastEventNginx.length != 0 ? lastEventNginx.find((e) => e.ip === event.ip) : false 
+                exists = exists === undefined ? exists = false : exists;
+                Logger.debug(`Valor de exists para comparacion de busqueda nginx = ${exists}`)
+                if (!exists) {
+                    lastEventNginx.push({
+                        ip : event.ip,
+                        comment : comment
+                    })
+                Logger.info(`⚠️ Nginx Posible ataque desde ${event.ip} con ${event.total_count} peticiones, countList: ${lastEventNginx.length}`);
+
+                }else if (event.total_count > exists.total_count) {
+                    // si ya existe pero con menor conteo, actualiza
+                    exists.total_count = event.total_count;
+                }
+        
+            }
+        });
+        resolve()
+    }).then(async ()=>{
+        if (lastEventNginx.length != 0 ){
+            //Agregar a la lista negra (Sin acciones actualemnete)
+            let nowCaracasString = new Date().toLocaleString('en-US', { 
+                timeZone: 'America/Caracas',
+                hour12: false,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            let date = new Date(nowCaracasString);
+            let comment = date
+            let ipToBlackList = lastEventNginx.map( item =>({
+                ip : item.ip,
+                comment : comment
+            }));
+            console.table(ipToBlackList)
+            await CloudflareApi.addIPToList(LIST_ID,ipToBlackList);
+            Logger.debug('Verificando las ip con mas de 24 horas en la lista')
+            await ipOver24H()
+        }else{
+            Logger.debug('No se agregaron ips a la lista negra desde NGINX');
+            Logger.debug('Verificando las ip con mas de 24 horas en la lista')
+            await ipOver24H()
+        }
+    })
+}
 
 async function ipOver24H(){
     const nowCaracasString = new Date().toLocaleString('en-US', { 

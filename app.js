@@ -36,6 +36,8 @@ async function iniciarMonitor() {
     Monitor.alertas()
     cloudflareEvent = setInterval(Monitor.cloudFlare,(intervaloMs * 5));
     Monitor.cloudFlare()
+    let nginxEvent = setInterval(Monitor.nginx,(intervaloMs * 5))
+    Monitor.nginx();
 
 }
 
