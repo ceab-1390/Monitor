@@ -204,22 +204,15 @@ module.exports.cloudFlare = async () => {
     }).then(async()=>{
         if (lastEvent.length != 0 ){
             //Agregar a la lista negra (Sin acciones actualemnete)
-            let date = new Date().toLocaleString('es-VE', { 
-                timeZone: 'America/Caracas',
-                hour12: false,
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            let comment = `[ ${date} ][NODEJS_MONITOR - Actividad Sospechosa!!]`
+            let date = new Date(now)
+            let comment = date
             let ipToBlackList = lastEvent.map( item =>({
                 ip : item.clientIp,
                 comment : comment
             }));
             await CloudflareApi.addIPToList(LIST_ID,ipToBlackList);
+            Logger.debug('Verificando las ip con mas de 24 horas en la lista')
+            await ipOver24H()
         }else{
             Logger.debug('No se agregaron ips a la lista negra')
         }
@@ -253,3 +246,21 @@ module.exports.cloudFlare = async () => {
     Logger.info(`El conteo actual en la lista es: ${lastEvent.length}`);
 
 };
+
+async function ipOver24H(){
+    const now = new Date();
+    const twentyFourHoursAgo = new Date(now.getTime() - (1 * 60 * 60 * 1000));
+    let list = await CloudflareApi.listItems(LIST_ID);
+    list = list.filter(item => {
+        const createdDate = new Date(item.created_on);
+        return createdDate < twentyFourHoursAgo;
+    }).map(item =>({
+        id : item.id,
+        ip_to_delete : item.ip,
+        created_on_comment: item.created_on
+    }));
+    Logger.debug('Litsa de ip con mas de 24 horas para su borrado (sin acciones aun!)')
+    console.table(list)
+}
+
+ipOver24H()

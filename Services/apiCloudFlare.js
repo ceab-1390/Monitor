@@ -146,7 +146,8 @@ class CloudflareApi {
   }
   };
 
-  static async listItems() {
+  static async listItems(LIST_ID) {
+    Logger.debug(LIST_ID)
   try {
     const res = await axios.get(
       `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/rules/lists/${LIST_ID}/items`,
@@ -164,13 +165,13 @@ class CloudflareApi {
     }
 
     const items = res.data.result;
-    Logger.log(`📋 Items en la lista (${items.length}):\n`);
-    items.forEach((item, i) => {
-      Logger.log(`${i+1}. IP: ${item.ip}`);
-      Logger.log(`   Item ID: ${item.id}`);
-      Logger.log(`   Comment: ${item.comment || '(sin descripción)'}`);
-      Logger.log('---');
-    });
+    let listIp = items.map(item => ({
+      id : item.id,
+      ip : item.ip,
+      created_on : item.comment
+    }));
+    return listIp;
+    //console.table(listIp)
 
   } catch (err) {
     Logger.error('❌ Error al consultar la lista:', err.response?.data || err.message);
