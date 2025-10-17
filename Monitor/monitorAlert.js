@@ -214,7 +214,9 @@ module.exports.cloudFlare = async () => {
             Logger.debug('Verificando las ip con mas de 24 horas en la lista')
             await ipOver24H()
         }else{
-            Logger.debug('No se agregaron ips a la lista negra')
+            Logger.debug('No se agregaron ips a la lista negra');
+            Logger.debug('Verificando las ip con mas de 24 horas en la lista')
+            await ipOver24H()
         }
 
     })
