@@ -204,7 +204,17 @@ module.exports.cloudFlare = async () => {
     }).then(async()=>{
         if (lastEvent.length != 0 ){
             //Agregar a la lista negra (Sin acciones actualemnete)
-            let date = new Date(now)
+            let nowCaracasString = new Date().toLocaleString('en-US', { 
+                timeZone: 'America/Caracas',
+                hour12: false,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            let date = new Date(nowCaracasString);
             let comment = date
             let ipToBlackList = lastEvent.map( item =>({
                 ip : item.clientIp,
@@ -250,8 +260,18 @@ module.exports.cloudFlare = async () => {
 };
 
 async function ipOver24H(){
-    const now = new Date();
-    const twentyFourHoursAgo = new Date(now.getTime() - (1 * 60 * 60 * 1000));
+    const nowCaracasString = new Date().toLocaleString('en-US', { 
+        timeZone: 'America/Caracas',
+        hour12: false,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    const now = new Date(nowCaracasString);
+    const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
     let list = await CloudflareApi.listItems(LIST_ID);
     list = list.filter(item => {
         const createdDate = new Date(item.created_on);
@@ -264,5 +284,3 @@ async function ipOver24H(){
     Logger.debug('Litsa de ip con mas de 24 horas para su borrado (sin acciones aun!)')
     console.table(list)
 }
-
-ipOver24H()
