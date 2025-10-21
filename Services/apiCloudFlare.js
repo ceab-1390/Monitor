@@ -147,7 +147,6 @@ class CloudflareApi {
   };
 
   static async listItems(LIST_ID) {
-    Logger.debug(LIST_ID)
   try {
     const res = await axios.get(
       `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/rules/lists/${LIST_ID}/items`,

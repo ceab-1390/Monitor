@@ -276,6 +276,7 @@ module.exports.nginx = async () => {
     });
     let date = new Date(nowCaracasString);
     let comment = date
+    Logger.debug(`La hora para el comentario es ${comment}`)
     new Promise((resolve)=>{
         eventNginx.forEach(event =>{
             if (event.total_count >= 10 ){
