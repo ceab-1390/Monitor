@@ -331,6 +331,7 @@ module.exports.nginx = async () => {
 }
 
 async function ipOver24H(){
+    let timeLock = Number(process.env.TIME_TO_LOCK);
     const nowCaracasString = new Date().toLocaleString('en-US', { 
         timeZone: 'America/Caracas',
         hour12: false,
@@ -342,7 +343,7 @@ async function ipOver24H(){
         second: '2-digit'
     });
     const now = new Date(nowCaracasString);
-    const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+    const twentyFourHoursAgo = new Date(now.getTime() - (timeLock * 60 * 60 * 1000));
     let list = await CloudflareApi.listItems(LIST_ID);
     Logger.debug(`Lista con elementos encontrados sin filtro`)
     console.table(list)
