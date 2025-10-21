@@ -148,29 +148,45 @@ class CloudflareApi {
 
   static async listItems(LIST_ID) {
   try {
-    const res = await axios.get(
-      `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/rules/lists/${LIST_ID}/items`,
-      {
-        headers: {
-          Authorization: `Bearer ${CF_TOKEN}`,
-          'Content-Type': 'application/json'
+    let allItems = [];
+    let cursor = null;
+    
+    do {
+      const params = cursor ? { cursor } : {};
+      
+      const res = await axios.get(
+        `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/rules/lists/${LIST_ID}/items`,
+        {
+          headers: {
+            Authorization: `Bearer ${CF_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          params
         }
+      );
+
+      if (!res.data.success) {
+        Logger.log('❌ Error:', res.data.errors);
+        return;
       }
-    );
 
-    if (!res.data.success) {
-      Logger.log('❌ Error:', res.data.errors);
-      return;
-    }
+      const items = res.data.result;
+      allItems = allItems.concat(items);
+      
+      // Verificar si hay más páginas
+      cursor = res.data.result_info?.cursor || null;
+      
+    } while (cursor);
 
-    const items = res.data.result;
-    let listIp = items.map(item => ({
-      id : item.id,
-      ip : item.ip,
-      created_on : item.comment
+    Logger.log(`✅ Total de items obtenidos: ${allItems.length}`);
+    
+    let listIp = allItems.map(item => ({
+      id: item.id,
+      ip: item.ip,
+      created_on: item.comment
     }));
+    
     return listIp;
-    //console.table(listIp)
 
   } catch (err) {
     Logger.error('❌ Error al consultar la lista:', err.response?.data || err.message);
