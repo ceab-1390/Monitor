@@ -9,7 +9,7 @@ const eventsInList = process.env.EVENTS_LIST
 const LIST_ID = process.env.LIST_ID
 let lastEvent = [];
 let lastEventNginx = [];
-
+let timeLock = Number(process.env.TIME_TO_LOCK);
 
 
 module.exports.alertas = async () =>{
@@ -219,11 +219,11 @@ module.exports.cloudFlare = async () => {
                 comment : comment
             }));
             await CloudflareApi.addIPToList(LIST_ID,ipToBlackList);
-            Logger.debug('Verificando las ip con mas de 24 horas en la lista')
+            Logger.debug(`Verificando las ip con mas de ${timeLock} horas en la lista`)
             await ipOver24H()
         }else{
             Logger.debug('No se agregaron ips a la lista negra');
-            Logger.debug('Verificando las ip con mas de 24 horas en la lista')
+            Logger.debug(`Verificando las ip con mas de ${timeLock} horas en la lista`)
             await ipOver24H()
         }
 
@@ -320,18 +320,17 @@ module.exports.nginx = async () => {
             Logger.debug(`Lista de ip encontradas en el log de NGINX para bloqueo`)
             console.table(ipToBlackList)
             await CloudflareApi.addIPToList(LIST_ID,ipToBlackList);
-            Logger.debug('Verificando las ip con mas de 24 horas en la lista')
+            Logger.debug(`Verificando las ip con mas de ${timeLock} horas en la lista`)
             await ipOver24H()
         }else{
             Logger.debug('No se agregaron ips a la lista negra desde NGINX');
-            Logger.debug('Verificando las ip con mas de 24 horas en la lista')
+            Logger.debug(`Verificando las ip con mas de ${timeLock} horas en la lista`)
             await ipOver24H()
         }
     })
 }
 
 async function ipOver24H(){
-    let timeLock = Number(process.env.TIME_TO_LOCK);
     const nowCaracasString = new Date().toLocaleString('en-US', { 
         timeZone: 'America/Caracas',
         hour12: false,
