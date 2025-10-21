@@ -355,6 +355,6 @@ async function ipOver24H(){
         ip_to_delete : item.ip,
         created_on_comment: item.created_on
     }));
-    Logger.debug('Litsa de ip con mas de 24 horas para su borrado (sin acciones aun!)')
+    Logger.debug(`Litsa de ip con mas de ${timeLock} horas para su borrado (sin acciones aun!)`)
     console.table(list)
 }
