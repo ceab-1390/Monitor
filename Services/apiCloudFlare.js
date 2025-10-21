@@ -193,23 +193,23 @@ class CloudflareApi {
   }
   };
 
-  static async deleteIPToList(item_id) {
+  static async deleteIPToList(list,listItems) {
   try {
     const res = await axios.delete(
-      `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/rules/lists/${LIST_ID}/items`,
+      `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/rules/lists/${list}/items`,
       {
         headers: {
           Authorization: `Bearer ${CF_TOKEN}`,
           'Content-Type': 'application/json'
         },
         data: {
-          items: [{ id: item_id }]
+          items: listItems
         }
       }
     );
 
     if (res.data.success) {
-      console.log(`✅ Item ${item_id} eliminado correctamente`);
+      console.log(`✅ Item ${listItems} eliminado correctamente`);
     } else {
       console.log('❌ Error al eliminar:', res.data.errors);
     }

@@ -357,8 +357,14 @@ async function ipOver24H(){
     }));
     listToDelete = list.map(item =>({
         id : item.id
-    }))
-    Logger.debug(`Litsa de ip con mas de ${timeLock} horas para su borrado (sin acciones aun!)`)
-    console.table(list)
-    console.table(listToDelete)
+    }));
+
+    if (listToDelete.length != 0){
+        Logger.debug(`Litsa de ip con mas de ${timeLock} horas para su borrado `)
+        console.table(list)
+        await CloudflareApi.deleteIPToList(LIST_ID,listToDelete)
+    }else{
+        Logger.debug("No se encontraron elementos para borrado en la lista")
+    }
+
 }
