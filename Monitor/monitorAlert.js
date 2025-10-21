@@ -350,13 +350,14 @@ async function ipOver24H(){
     };
 
     await sendIpListMessage(listaIps)
+    listaIps = []
 
 }
 
 
 async function sendIpListMessage(listaIpsSend) {
     let tiempoDeBloqueo = timeLock 
-    if (listaIpsSend.length != 0){
+    if (listaIpsSend.length = 0){
         const messageBody = listaIpsSend
         .map(
             (item, i) =>
@@ -367,6 +368,7 @@ async function sendIpListMessage(listaIpsSend) {
         console.table(listaIpsSend);
         const mensajeTg = Templates.eventosCloudflareTelegram(messageBody,tiempoDeBloqueo);
         await notifier.sendTelegram(chatId, mensajeTg);
+        listaIpsSend = []
     }
 
 }
