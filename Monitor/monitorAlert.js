@@ -343,13 +343,13 @@ async function ipOver24H(){
         second: '2-digit'
     });
     const now = new Date(nowCaracasString);
-    const twentyFourHoursAgo = new Date(now.getTime() - (timeLock * 60 * 60 * 1000));
+    const hoursAgo = new Date(now.getTime() - (timeLock * 60 * 60 * 1000));
     let list = await CloudflareApi.listItems(LIST_ID);
     Logger.debug(`Lista con elementos encontrados sin filtro`)
     console.table(list)
     list = list.filter(item => {
         const createdDate = new Date(item.created_on);
-        return createdDate < twentyFourHoursAgo;
+        return createdDate < hoursAgo;
     }).map(item =>({
         id : item.id,
         ip_to_delete : item.ip,
