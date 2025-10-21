@@ -10,7 +10,7 @@ const LIST_ID = process.env.LIST_ID
 let lastEvent = [];
 let lastEventNginx = [];
 let timeLock = Number(process.env.TIME_TO_LOCK);
-
+let listaIps = [];
 
 module.exports.alertas = async () =>{
     let IntervalToResend = process.env.INTERVAL_TO_RESEND || 30; //minutos
@@ -227,33 +227,7 @@ module.exports.cloudFlare = async () => {
             await ipOver24H()
         }
 
-    })
-
-
-
-
-    if (lastEvent.length >= Number(eventsInList)) {
-        Logger.info(`📊 Cantidad de registros para la tabla: ${lastEvent.length}`);
-        console.table(lastEvent);
-
-        // construimos el cuerpo del mensaje
-        const messageBody = lastEvent
-        .map(
-            (item, i) =>
-            `🔸IP: ${item.clientIp}\n 🧮 Count: ${item.count}\n 🚨 Acción: ${item.action}`
-        )
-        .join("\n\n");
-
-        const mensajeTg = Templates.eventosCloudflareTelegram(messageBody);
-        await notifier.sendTelegram(chatId, mensajeTg);
-
-        // Limpieza opcional
-        lastEvent = [];
-    } else {
-        Logger.info(`La lista no tiene suficientes items para ser enviada`)
-    };
-
-    Logger.info(`El conteo actual en la lista es: ${lastEvent.length}`);
+    });
 
 };
 
@@ -330,6 +304,7 @@ module.exports.nginx = async () => {
     })
 }
 
+
 async function ipOver24H(){
     const nowCaracasString = new Date().toLocaleString('en-US', { 
         timeZone: 'America/Caracas',
@@ -344,8 +319,12 @@ async function ipOver24H(){
     const now = new Date(nowCaracasString);
     const hoursAgo = new Date(now.getTime() - (timeLock * 60 * 60 * 1000));
     let list = await CloudflareApi.listItems(LIST_ID);
-    Logger.debug(`Lista con elementos encontrados sin filtro`)
-    console.table(list)
+    listaIps = list.map(item =>({
+        ip : item.ip,
+        status : 'ACTIVO',
+        timestamp : item.created_on
+    }));
+
     list = list.filter(item => {
         const createdDate = new Date(item.created_on);
         return createdDate < hoursAgo;
@@ -360,10 +339,34 @@ async function ipOver24H(){
 
     if (listToDelete.length != 0){
         Logger.debug(`Litsa de ip con mas de ${timeLock} horas para su borrado `)
-        console.table(list)
         await CloudflareApi.deleteIPToList(LIST_ID,listToDelete)
+        listaIps.push(listToDelete.map(item => ({
+            ip : item.ip,
+            status : 'BORRADO',
+            timestamp : now
+        })))
     }else{
         Logger.debug("No se encontraron elementos para borrado en la lista")
+    };
+
+    await sendIpListMessage(listaIps)
+
+}
+
+
+async function sendIpListMessage(listaIpsSend) {
+    let tiempoDeBloqueo = timeLock 
+    if (listaIpsSend.length != 0){
+        const messageBody = listaIpsSend
+        .map(
+            (item, i) =>
+            `${i + 1}🔸IP: ${item.ip}\n 🔵 Status: ${item.status}\n Timestamp: ${item.timestamp}`
+        )
+        .join("\n\n");
+        Logger.info(`📊 Cantidad de registros para la tabla: ${listaIpsSend.length}`);
+        console.table(listaIpsSend);
+        const mensajeTg = Templates.eventosCloudflareTelegram(messageBody,tiempoDeBloqueo);
+        await notifier.sendTelegram(chatId, mensajeTg);
     }
 
 }
