@@ -355,6 +355,10 @@ async function ipOver24H(){
         ip_to_delete : item.ip,
         created_on_comment: item.created_on
     }));
+    listToDelete = list.map(item =>({
+        id : item.id
+    }))
     Logger.debug(`Litsa de ip con mas de ${timeLock} horas para su borrado (sin acciones aun!)`)
     console.table(list)
+    console.table(listToDelete)
 }
