@@ -344,7 +344,8 @@ async function ipOver24H(){
     const now = new Date(nowCaracasString);
     const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
     let list = await CloudflareApi.listItems(LIST_ID);
-    list = list.filter(item => {
+    console.table(list)
+    list = list.forEach(item => {
         const createdDate = new Date(item.created_on);
         return createdDate < twentyFourHoursAgo;
     }).map(item =>({
