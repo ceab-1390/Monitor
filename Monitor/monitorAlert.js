@@ -317,6 +317,7 @@ module.exports.nginx = async () => {
                 ip : item.ip,
                 comment : comment
             }));
+            Logger.debug(`Lista de ip encontradas en el log de NGINX para bloqueo`)
             console.table(ipToBlackList)
             await CloudflareApi.addIPToList(LIST_ID,ipToBlackList);
             Logger.debug('Verificando las ip con mas de 24 horas en la lista')
