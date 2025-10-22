@@ -202,17 +202,7 @@ module.exports.cloudFlare = async () => {
     }).then(async()=>{
         if (lastEvent.length != 0 ){
             //Agregar a la lista negra (Sin acciones actualemnete)
-            let nowCaracasString = new Date().toLocaleString('en-US', { 
-                timeZone: 'America/Caracas',
-                hour12: false,
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            let date = new Date(nowCaracasString);
+            let date = new Date().getTime();
             let comment = date
             let ipToBlackList = lastEvent.map( item =>({
                 ip : item.clientIp,
@@ -238,17 +228,7 @@ module.exports.nginx = async () => {
         Logger.debug('Sin datos de actividad sospechosa en nginx')
         return
     }
-    let nowCaracasString = new Date().toLocaleString('en-US', { 
-                timeZone: 'America/Caracas',
-                hour12: false,
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-    });
-    let date = new Date(nowCaracasString);
+    let date = new Date().getTime();
     let comment = date
     Logger.debug(`La hora para el comentario es ${comment}`)
     new Promise((resolve)=>{
@@ -275,17 +255,7 @@ module.exports.nginx = async () => {
     }).then(async ()=>{
         if (lastEventNginx.length != 0 ){
             //Agregar a la lista negra (Sin acciones actualemnete)
-            let nowCaracasString = new Date().toLocaleString('en-US', { 
-                timeZone: 'America/Caracas',
-                hour12: false,
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            let date = new Date(nowCaracasString);
+            let date = new Date().getTime();
             let comment = date
             let ipToBlackList = lastEventNginx.map( item =>({
                 ip : item.ip,
@@ -306,36 +276,31 @@ module.exports.nginx = async () => {
 
 
 async function ipOver24H(){
-    const nowCaracasString = new Date().toLocaleString('en-US', { 
-        timeZone: 'America/Caracas',
-        hour12: false,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
-    const now = new Date(nowCaracasString);
-    const hoursAgo = new Date(now.getTime() - (timeLock * 60 * 60 * 1000));
+    const now = new Date().getTime();
+    const hoursAgo = new Date(now - (timeLock * 60 * 60 * 1000));
     let list = await CloudflareApi.listItems(LIST_ID);
+    console.table(list)
     listaIps = list.map(item =>({
         ip : item.ip,
         status : 'ACTIVO',
         timestamp : item.created_on
     }));
-
+    console.table(listaIps)
     list = list.filter(item => {
         const createdDate = new Date(item.created_on);
+        Logger.debug(`Hora de creacion = ${createdDate}, hora de comparacion ${hoursAgo} resultado ${createdDate < hoursAgo}`)
         return createdDate < hoursAgo;
     }).map(item =>({
         id : item.id,
         ip_to_delete : item.ip,
         created_on_comment: item.created_on
     }));
+    console.log('List 2')
+    console.table(list)
     listToDelete = list.map(item =>({
         id : item.id
     }));
+    console.table(listToDelete)
 
     if (listToDelete.length != 0){
         Logger.debug(`Litsa de ip con mas de ${timeLock} horas para su borrado `)
